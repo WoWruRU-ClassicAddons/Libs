@@ -24,89 +24,77 @@ if AceLocale:HasInstance(MAJOR_VERSION) then
     BabbleClass:ClearLocales()
 end
 
-AceLocale:RegisterTranslation(MAJOR_VERSION, "enUS", function()
-	return {
-		["Warlock"] = "Warlock",
-		["Warrior"] = "Warrior",
-		["Hunter"] = "Hunter",
-		["Mage"] = "Mage",
-		["Priest"] = "Priest",
-		["Druid"] = "Druid",
-		["Paladin"] = "Paladin",
-		["Shaman"] = "Shaman",
-		["Rogue"] = "Rogue",
-	}
-end)
+AceLocale:RegisterTranslation(MAJOR_VERSION, "enUS", function() return {
+	["Warlock"] = "Warlock",
+	["Warrior"] = "Warrior",
+	["Hunter"] = "Hunter",
+	["Mage"] = "Mage",
+	["Priest"] = "Priest",
+	["Druid"] = "Druid",
+	["Paladin"] = "Paladin",
+	["Shaman"] = "Shaman",
+	["Rogue"] = "Rogue",
+} end)
 
-AceLocale:RegisterTranslation(MAJOR_VERSION, "ruRU", function()
-	return {
-		["Warlock"] = "Чернокнижник",
-		["Warrior"] = "Воин",
-		["Hunter"] = "Охотник",
-		["Mage"] = "Маг",
-		["Priest"] = "Жрец",
-		["Druid"] = "Друид",
-		["Paladin"] = "Паладин",
-		["Shaman"] = "Шаман",
-		["Rogue"] = "Разбойник",
-	}
-end)
+AceLocale:RegisterTranslation(MAJOR_VERSION, "ruRU", function() return {
+	["Warlock"] = "Чернокнижник",
+	["Warrior"] = "Воин",
+	["Hunter"] = "Охотник",
+	["Mage"] = "Маг",
+	["Priest"] = "Жрец",
+	["Druid"] = "Друид",
+	["Paladin"] = "Паладин",
+	["Shaman"] = "Шаман",
+	["Rogue"] = "Разбойник",
+} end)
 
-AceLocale:RegisterTranslation(MAJOR_VERSION, "deDE", function()
-	return {
-		["Warlock"] = "Hexenmeister",
-		["Warrior"] = "Krieger",
-		["Hunter"] = "Jäger",
-		["Mage"] = "Magier",
-		["Priest"] = "Priester",
-		["Druid"] = "Druide",
-		["Paladin"] = "Paladin",
-		["Shaman"] = "Schamane",
-		["Rogue"] = "Schurke",
-	}
-end)
+AceLocale:RegisterTranslation(MAJOR_VERSION, "deDE", function() return {
+	["Warlock"] = "Hexenmeister",
+	["Warrior"] = "Krieger",
+	["Hunter"] = "Jäger",
+	["Mage"] = "Magier",
+	["Priest"] = "Priester",
+	["Druid"] = "Druide",
+	["Paladin"] = "Paladin",
+	["Shaman"] = "Schamane",
+	["Rogue"] = "Schurke",
+} end)
 
-AceLocale:RegisterTranslation(MAJOR_VERSION, "frFR", function()
-	return {
-		["Warlock"] = "Démoniste",
-		["Warrior"] = "Guerrier",
-		["Hunter"] = "Chasseur",
-		["Mage"] = "Mage",
-		["Priest"] = "Prêtre",
-		["Druid"] = "Druide",
-		["Paladin"] = "Paladin",
-		["Shaman"] = "Chaman",
-		["Rogue"] = "Voleur",
-	}
-end)
+AceLocale:RegisterTranslation(MAJOR_VERSION, "frFR", function() return {
+	["Warlock"] = "Démoniste",
+	["Warrior"] = "Guerrier",
+	["Hunter"] = "Chasseur",
+	["Mage"] = "Mage",
+	["Priest"] = "Prêtre",
+	["Druid"] = "Druide",
+	["Paladin"] = "Paladin",
+	["Shaman"] = "Chaman",
+	["Rogue"] = "Voleur",
+} end)
 
-AceLocale:RegisterTranslation(MAJOR_VERSION, "zhCN", function()
-	return {
-		["Warlock"] = "术士",
-		["Warrior"] = "战士",
-		["Hunter"] = "猎人",
-		["Mage"] = "法师",
-		["Priest"] = "牧师",
-		["Druid"] = "德鲁伊",
-		["Paladin"] = "圣骑士",
-		["Shaman"] = "萨满祭祀",
-		["Rogue"] = "盗贼",
-	}
-end)
+AceLocale:RegisterTranslation(MAJOR_VERSION, "zhCN", function() return {
+	["Warlock"] = "术士",
+	["Warrior"] = "战士",
+	["Hunter"] = "猎人",
+	["Mage"] = "法师",
+	["Priest"] = "牧师",
+	["Druid"] = "德鲁伊",
+	["Paladin"] = "圣骑士",
+	["Shaman"] = "萨满祭祀",
+	["Rogue"] = "盗贼",
+} end)
 
-AceLocale:RegisterTranslation(MAJOR_VERSION, "koKR", function()
-	return {
-		["Warlock"] = "흑마법사",
-		["Warrior"] = "전사",
-		["Hunter"] = "사냥꾼",
-		["Mage"] = "마법사",
-		["Priest"] = "사제",
-		["Druid"] = "드루이드",
-		["Paladin"] = "성기사",
-		["Shaman"] = "주술사",
-		["Rogue"] = "도적",
-	}
-end)
+AceLocale:RegisterTranslation(MAJOR_VERSION, "koKR", function() return {
+	["Warlock"] = "흑마법사",
+	["Warrior"] = "전사",
+	["Hunter"] = "사냥꾼",
+	["Mage"] = "마법사",
+	["Priest"] = "사제",
+	["Druid"] = "드루이드",
+	["Paladin"] = "성기사",
+	["Shaman"] = "주술사",
+	["Rogue"] = "도적",
+} end)
 
 BabbleClass = AceLocale:GetInstance(MAJOR_VERSION, true)
 BabbleClass:SetStrictness(true)

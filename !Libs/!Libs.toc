@@ -58,19 +58,8 @@ SE\SpecialEvents-Movement-2.0\SpecialEvents-Movement-2.0.lua
 SE\SpecialEvents-Breath-2.0\SpecialEvents-Breath-2.0.lua
 SE\SpecialEvents-Equipped-2.0\SpecialEvents-Equipped-2.0.lua
 
-Babble\Babble-Boss-2.0\Babble-Boss-2.0.lua
-Babble\Babble-Class-2.0\Babble-Class-2.0.lua
-Babble\Babble-Race-2.0\Babble-Race-2.0.lua
-Babble\Babble-Spell-2.0\Babble-Spell-2.0.lua
-Babble\Babble-SpellTree-2.0\Babble-SpellTree-2.0.lua
-Babble\Babble-Zone-2.0\Babble-Zone-2.0.lua
-
-Babble\Babble-Boss-2.1\Babble-Boss-2.1.lua
 Babble\Babble-Class-2.1\Babble-Class-2.1.lua
-Babble\Babble-Race-2.1\Babble-Race-2.1.lua
 Babble\Babble-Spell-2.1\Babble-Spell-2.1.lua
-Babble\Babble-SpellTree-2.1\Babble-SpellTree-2.1.lua
-Babble\Babble-Zone-2.1\Babble-Zone-2.1.lua
 
 Babble\Babble-Boss-2.2\Babble-Boss-2.2.lua
 Babble\Babble-Class-2.2\Babble-Class-2.2.lua
@@ -80,9 +69,6 @@ Babble\Babble-SpellTree-2.2\Babble-SpellTree-2.2.lua
 Babble\Babble-Zone-2.2\Babble-Zone-2.2.lua
 Babble\Babble-Faction-2.2\Babble-Faction-2.2.lua
 Babble\Babble-ItemSet-2.2\Babble-ItemSet-2.2.lua
-
-Babble\Babble-Spell-2.3\Babble-Spell-2.3.lua
-Babble\Babble-Boss-2.3\Babble-Boss-2.3.lua
 
 PT\Core\PTEmbed.lua
 PT\TradeSkills\PTTradeskillsEmbed.lua
@@ -130,10 +116,7 @@ ItemClasses-2.0\ItemClasses-2.0.lua
 OneStorage-2.0\OneStorage-2.0.lua
 Surface-1.0\Surface-1.0.lua
 Quixote-1.0\Quixote-1.0.lua
-FiveSecLib-1.0\FiveSecLib-1.0.lua
 HealComm-1.0\HealComm-1.0.lua
-DruidManaLib-1.0\DruidManaLib-1.0.lua
-CastLib-1.0\CastLib-1.0.lua
 Waterfall-1.0\Waterfall-1.0.lua
 
 FAIAP.lua

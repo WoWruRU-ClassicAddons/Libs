@@ -1,6 +1,6 @@
 --[[
 Name: HealComm-1.0
-Revision: $Rev: 11500 $
+Revision: $Rev: 11630 $
 Author(s): aviana
 Website: https://github.com/Aviana
 Description: A library to provide communication of heals and resurrections.
@@ -8,7 +8,7 @@ Dependencies: AceLibrary, AceEvent-2.0, RosterLib-2.0
 ]]
 
 local MAJOR_VERSION = "HealComm-1.0"
-local MINOR_VERSION = "$Revision: 11500 $"
+local MINOR_VERSION = "$Revision: 11630 $"
 
 if not AceLibrary then error(MAJOR_VERSION .. " requires AceLibrary") end
 if not AceLibrary:IsNewVersion(MAJOR_VERSION, MINOR_VERSION) then return end
@@ -855,7 +855,8 @@ HealComm.Debuffs = {
 	
 local function getSetBonus()
 	healcommTip:SetInventoryItem("player", 1)
-	local text = getglobal("healcommTipTextLeft"..healcommTip:NumLines()):GetText()
+	local text = "healcommTipTextLeft"..(healcommTip:NumLines() or 1)
+	text = getglobal(text):GetText()
 	if text == L["Set: Increases the duration of your Rejuvenation spell by 3 sec."] or text == L["Set: Increases the duration of your Renew spell by 3 sec."] then
 		return true
 	else
@@ -866,7 +867,7 @@ end
 function HealComm:GetBuffSpellPower()
 	local Spellpower = 0
 	local healmod = 1
-	for i=1, 16 do
+	for i=1, 32 do
 		local buffTexture, buffApplications = UnitBuff("player", i)
 		if not buffTexture then
 			return Spellpower, healmod
@@ -881,15 +882,16 @@ function HealComm:GetBuffSpellPower()
 	return Spellpower, healmod
 end
 
-function HealComm:GetUnitSpellPower(unit)
+function HealComm:GetUnitSpellPower(unit, spell)
 	local targetpower = 0
 	local targetmod = 1
 	local buffTexture, buffApplications
 	local debuffTexture, debuffApplications
-	for i=1, 16 do
+	local buffName
+	for i=1, 32 do
 		if UnitIsVisible(unit) and UnitIsConnected(unit) and UnitCanAssist("player", unit) then
 			buffTexture, buffApplications = UnitBuff(unit, i)
-			healcommTip:SetUnitBuff("target", i)
+			healcommTip:SetUnitBuff(unit, i)
 		else
 			buffTexture, buffApplications = UnitBuff("player", i)
 			healcommTip:SetUnitBuff("player", i)
@@ -897,7 +899,7 @@ function HealComm:GetUnitSpellPower(unit)
 		if not buffTexture then
 			break
 		end
-		local buffName = healcommTipTextLeft1:GetText()
+		buffName = healcommTipTextLeft1:GetText()
 		if buffName == L["Blessing of Light"] then
 			local HLBonus, FoLBonus = strmatch(healcommTipTextLeft2:GetText(),"(%d+).-(%d+)")
 			if (spell == L["Flash of Light"]) then
@@ -1400,7 +1402,7 @@ function HealComm:OnMouseDown(object)
 			unit = roster:GetUnitIDFromName(name)
 		end
 	end
-	if ( self.CurrentSpellName and SpellIsTargeting() ) then
+	if ( self.CurrentSpellName and SpellIsTargeting() and UnitExists(unit) ) then
 		self:ProcessSpellCast(unit)
 	end
 	if ( self.hooks[object]["OnMouseDown"] ) then
@@ -1471,7 +1473,7 @@ function HealComm:TargetUnit(unit)
 end
 
 function HealComm:ProcessSpellCast(unit)
-	local power, mod = self:GetUnitSpellPower(unit)
+	local power, mod = self:GetUnitSpellPower(unit, self.CurrentSpellName)
 	self.SpellCastInfo[1] = self.CurrentSpellName
 	self.SpellCastInfo[2] = self.CurrentSpellRank
 	self.SpellCastInfo[3] = UnitName(unit)
