@@ -451,7 +451,7 @@ function FuBarPlugin:Hide(check)
 	if self.minimapFrame then
 		self.minimapFrame:Hide()
 	end
-	
+
 	if Dewdrop:IsOpen(self.frame) or (self.minimapFrame and Dewdrop:IsOpen(self.minimapFrame)) then
 		Dewdrop:Close()
 	end
@@ -748,7 +748,7 @@ function FuBarPlugin:OnInstanceInit(target)
 		self:error(MAJOR_VERSION .. " requires Dewdrop-2.0.")
 	end
 	self.registry[target] = true
-	
+
 	local _,_,folderName = string.find(debugstack(6, 1, 0), "\\AddOns\\(.*)\\")
 	target.folderName = folderName
 	self.folderNames[target] = folderName
@@ -764,7 +764,7 @@ function FuBarPlugin:CreateBasicPluginFrame(name)
 	frame:SetWidth(150)
 	frame:SetHeight(24)
 	frame:SetPoint("CENTER", UIParent, "CENTER")
-	
+
 	frame:SetScript("OnClick", function()
 		if type(self.OnClick) == "function" then
 			self:OnClick(arg1)
@@ -857,7 +857,7 @@ function FuBarPlugin:OpenMenu(frame)
 		return
 	end
 	Tablet:Close()
-	
+
 	if not Dewdrop:IsRegistered(self:GetFrame()) then
 		if type(self.OnMenuRequest) == "table" and (not self.OnMenuRequest.handler or self.OnMenuRequest.handler == self) and self.OnMenuRequest.type == "group" then
 			Dewdrop:InjectAceOptionsTable(self, self.OnMenuRequest)
@@ -873,12 +873,12 @@ function FuBarPlugin:OpenMenu(frame)
 						'isTitle', true
 					)
 				end
-				
+
 				if level == 1 then
 					if self.OnMenuRequest then
 						self:OnMenuRequest(level, value, false, valueN_1, valueN_2, valueN_3, valueN_4)
 					end
-					
+
 					if not self.overrideMenu then
 						if self.MenuSettings then
 							Dewdrop:AddLine()
@@ -947,12 +947,12 @@ function FuBarPlugin.OnEmbedInitialize(FuBarPlugin, self)
 		local frame = _G[name]
 		if not frame or not _G[name .. "Text"] or not _G[name .. "Icon"] then
 			frame = self:CreateBasicPluginFrame(name)
-			
+
 			local icon = frame:CreateTexture(name .. "Icon", "ARTWORK")
 			icon:SetWidth(16)
 			icon:SetHeight(16)
 			icon:SetPoint("LEFT", frame, "LEFT")
-			
+
 			local text = frame:CreateFontString(name .. "Text", "ARTWORK")
 			text:SetWidth(134)
 			text:SetHeight(24)
@@ -965,16 +965,16 @@ function FuBarPlugin.OnEmbedInitialize(FuBarPlugin, self)
 	else
 		self.userDefinedFrame = true
 	end
-	
+
 	self.frame.plugin = self
 	self.frame:SetParent(UIParent)
 	self.frame:SetPoint("RIGHT", UIParent, "LEFT", -5, 0)
 	self.frame:Hide()
-	
+
 	if self.hasIcon then
 		self:SetIcon(self.hasIcon)
 	end
-	
+
 	if CheckFuBar() then
 		FuBar:RegisterPlugin(self)
 	end
@@ -997,7 +997,7 @@ function FuBarPlugin.OnEmbedEnable(FuBarPlugin, self)
 		end
 	end
 	self:CheckWidth(true)
-	
+
 	if not self.hideWithoutStandby or (self.db and not self.db.profile.hidden) then
 		if FuBarPlugin.enabledPlugins[self] then
 			CheckShow(self, self.panelIdTmp)
@@ -1006,11 +1006,11 @@ function FuBarPlugin.OnEmbedEnable(FuBarPlugin, self)
 		end
 	end
 	FuBarPlugin.enabledPlugins[self] = true
-	
+
 	if not self.overrideTooltip and not self.cannotDetachTooltip and self.db and self.db.profile.detachedTooltip and self.db.profile.detachedTooltip.detached then
 		FuBarPlugin:ScheduleEvent(self.DetachTooltip, 0, self)
 	end
-	
+
 	if self:IsLoadOnDemand() and CheckFuBar() then
 		if not FuBar.db.profile.loadOnDemand then
 			FuBar.db.profile.loadOnDemand = {}
@@ -1020,7 +1020,7 @@ function FuBarPlugin.OnEmbedEnable(FuBarPlugin, self)
 		end
 		FuBar.db.profile.loadOnDemand[self.folderName].disabled = nil
 	end
-	
+
 	if CheckFuBar() and AceLibrary:HasInstance("AceConsole-2.0") then
 		if not recheckPlugins then
 			local AceConsole = AceLibrary("AceConsole-2.0")
@@ -1039,7 +1039,7 @@ end
 
 function FuBarPlugin.OnEmbedDisable(FuBarPlugin, self)
 	self:Hide(false)
-	
+
 	if self:IsLoadOnDemand() and CheckFuBar() then
 		if not FuBar.db.profile.loadOnDemand then
 			FuBar.db.profile.loadOnDemand = {}
@@ -1195,13 +1195,13 @@ end
 
 local function activate(self, oldLib, oldDeactivate)
 	FuBarPlugin = self
-	
+
 	if oldLib then
 		self.registry = oldLib.registry
 		self.folderNames = oldLib.folderNames
 		self.enabledPlugins = oldLib.enabledPlugins
 	end
-	
+
 	if not self.registry then
 		self.registry = {}
 	end
@@ -1211,9 +1211,9 @@ local function activate(self, oldLib, oldDeactivate)
 	if not self.enabledPlugins then
 		self.enabledPlugins = {}
 	end
-	
+
 	FuBarPlugin.activate(self, oldLib, oldDeactivate)
-	
+
 	if oldDeactivate then
 		oldDeactivate(oldLib)
 	end
@@ -1222,7 +1222,7 @@ end
 local function external(self, major, instance)
 	if major == "AceEvent-2.0" then
 		AceEvent = instance
-		
+
 		AceEvent:embed(self)
 	elseif major == "Tablet-2.0" then
 		Tablet = instance
@@ -1485,15 +1485,15 @@ end
 
 local function activate(self, oldLib, oldDeactivate)
 	MinimapContainer = self
-	
+
 	if oldLib then
 		self.plugins = oldLib.plugins
 	end
-	
+
 	if not self.plugins then
 		self.plugins = {}
 	end
-	
+
 	if oldDeactivate then
 		oldDeactivate(oldLib)
 	end

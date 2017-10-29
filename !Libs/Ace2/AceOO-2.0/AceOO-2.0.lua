@@ -75,35 +75,27 @@ end
 --					or when it is called directly (__call metamethod).
 local Factory
 do
-	local function new(obj, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12,
-	a13, a14, a15, a16, a17, a18, a19, a20)
+	local function new(obj, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20)
 	local t = {}
 	local uid = getuid(t)
 	local l = getlibrary
 	obj:init(t, l(a1), l(a2), l(a3), l(a4), l(a5), l(a6), l(a7),
 		l(a8), l(a9), l(a10), l(a11), l(a12), l(a13),
-		l(a14), l(a15), l(a16), l(a17), l(a18), l(a19),
-	l(a20))
+		l(a14), l(a15), l(a16), l(a17), l(a18), l(a19), l(a20))
 	t.uid = uid
 	return t
 	end
 	
-	local function createnew(self, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10,
-		a11, a12, a13, a14, a15, a16, a17, a18,
-	a19, a20)
+	local function createnew(self, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20)
 	local o = self.prototype
 	local l = getlibrary
 	return new(o, l(a1), l(a2), l(a3), l(a4), l(a5), l(a6), l(a7),
 		l(a8), l(a9), l(a10), l(a11), l(a12), l(a13),
-		l(a14), l(a15), l(a16), l(a17), l(a18), l(a19),
-	l(a20))
+		l(a14), l(a15), l(a16), l(a17), l(a18), l(a19), l(a20))
 	end
 	
-	function Factory(obj, newobj, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10,
-		a11, a12, a13, a14, a15, a16, a17, a18,
-	a19, a20)
-	local t = new(obj, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12,
-	a13, a14, a15, a16, a17, a18, a19, a20)
+	function Factory(obj, newobj, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20)
+	local t = new(obj, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20)
 	t.prototype = newobj
 	t.new = createnew
 	getmetatable(t).__call = t.new
@@ -265,7 +257,7 @@ local function inherits(object, parent)
 				break
 			end
 		end
-		
+
 		local isInterface = false
 		local curr = parent.class
 		while true do
@@ -333,7 +325,7 @@ local class_new
 do
 	Class = Factory(Object, setmetatable({}, {__index = Object}), Object)
 	Class.super = Object
-	
+
 	local function protostring(t)
 		return '<' .. tostring(t.class) .. ' prototype>'
 	end
@@ -438,8 +430,7 @@ do
 			AceOO:error("cannot concatenate two incompatible objects")
 		end
 	end
-	function class_new(self, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12,
-	a13, a14, a15, a16, a17, a18, a19, a20)
+	function class_new(self, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20)
 	if self.virtual then
 		AceOO:error("Cannot instantiate a virtual class.")
 	end
@@ -466,8 +457,7 @@ do
 	end
 	local tmp = initStatus
 	initStatus = newobj
-	newobj:init(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12,
-	a13, a14, a15, a16, a17, a18, a19, a20)
+	newobj:init(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20)
 	if initStatus then
 		initStatus = tmp
 		AceOO:error("Initialization not completed, be sure to call the superclass's init method.")
@@ -478,31 +468,23 @@ do
 	end
 	local classmeta = {
 		__tostring = objtostring,
-		__call = function(self, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12,
-		a13, a14, a15, a16, a17, a18, a19, a20)
-		return self:new(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12,
-		a13, a14, a15, a16, a17, a18, a19, a20)
+		__call = function(self, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20)
+		return self:new(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20)
 		end,
 	}
-	function Class:init(newclass, parent, a1, a2, a3, a4, a5, a6, a7, a8, a9,
-		a10, a11, a12, a13, a14, a15, a16,
-	a17, a18, a19, a20)
+	function Class:init(newclass, parent, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20)
 	parent = parent or self
 	
 	local total
 	
 	if parent.class then
 		total = {
-			parent, a1, a2, a3, a4, a5, a6, a7, a8, a9,
-			a10, a11, a12, a13, a14, a15, a16,
-			a17, a18, a19, a20
+			parent, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20
 		}
 		parent = self
 	else
 		total = {
-			a1, a2, a3, a4, a5, a6, a7, a8, a9,
-			a10, a11, a12, a13, a14, a15, a16,
-			a17, a18, a19, a20
+			a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20
 		}
 	end
 	if not inherits(parent, Class) then
@@ -656,10 +638,8 @@ end
 -- @brief	A factory for creating classes.	Rarely used directly.
 local ClassFactory = Factory(Object, Class, Object)
 
-function Class:new(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11,
-a12, a13, a14, a15, a16, a17, a18, a19, a20)
-local x = ClassFactory:new(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11,
-a12, a13, a14, a15, a16, a17, a18, a19, a20)
+function Class:new(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20)
+local x = ClassFactory:new(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20)
 if AceOO.classes then
 	AceOO.classes[x] = true
 end
@@ -698,19 +678,19 @@ do
 		if field == nil then
 			return
 		end
-		
+
 		if rawget(target, field) or (target[field] and target[field] ~= state[field]) then
 			AceOO:error("Method conflict in attempt to mixin. Field %q", field)
 		end
-		
+
 		target[field] = state[field]
-		
+
 		local ret,msg = pcall(_Embed, state, field, target)
 		if not ret then
 			-- Mix in the next method according to the defined interface.	If that
 			-- fails due to a conflict, re-raise to back out the previous mixed
 			-- methods.
-			
+
 			target[field] = nil
 			AceOO:error(msg)
 		end
@@ -755,9 +735,7 @@ do
 		end
 	end
 	
-	function Mixin.prototype:init(export, a1, a2, a3, a4, a5, a6, a7, a8, a9,
-		a10, a11, a12, a13, a14, a15, a16,
-	a17, a18, a19, a20)
+	function Mixin.prototype:init(export, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20)
 	AceOO:argCheck(export, 2, "table")
 	for k,v in pairs(export) do
 		if type(k) ~= "number" then
@@ -776,9 +754,9 @@ do
 	local interfaces
 	if a1 then
 		local l = getlibrary
-		interfaces = { l(a1), l(a2), l(a3), l(a4), l(a5), l(a6), l(a7), l(a8),
-			l(a9), l(a10), l(a11), l(a12), l(a13), l(a14), l(a15), l(a16),
-		l(a17), l(a18), l(a19), l(a20) }
+		interfaces = { l(a1), l(a2), l(a3), l(a4), l(a5), l(a6),
+			l(a7), l(a8), l(a9), l(a10), l(a11), l(a12), l(a13),
+			l(a14), l(a15), l(a16), l(a17), l(a18), l(a19), l(a20) }
 		for _,v in ipairs(interfaces) do
 			if not v.class or not inherits(v, Interface) then
 				AceOO:error("Mixins can inherit only from interfaces")
@@ -898,8 +876,7 @@ do
 		end
 	end
 	local t
-	local function getcomplexuid(sc, m1, m2, m3, m4, m5, m6, m7, m8, m9,
-	m10, m11, m12, m13, m14, m15, m16, m17, m18, m19, m20)
+	local function getcomplexuid(sc, m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11, m12, m13, m14, m15, m16, m17, m18, m19, m20)
 	if not t then t = {} end
 	if sc then if sc.uid then table.insert(t, sc.uid) else AceOO:error("%s is not an appropriate class/mixin", ts(sc)) end
 		if m1 then if m1.uid then table.insert(t, m1.uid) else AceOO:error("%s is not an appropriate mixin", ts(m1)) end
@@ -930,20 +907,20 @@ do
 																					return uid
 	end
 	local classmeta
-	function Classpool(sc, m1, m2, m3, m4, m5, m6, m7, m8, m9,
-		m10, m11, m12, m13, m14, m15, m16,
-	m17, m18, m19, m20)
+	function Classpool(sc, m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11, m12, m13, m14, m15, m16, m17, m18, m19, m20)
 	local l = getlibrary
-	sc, m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11, m12, m13, m14, m15, m16, m17, m18, m19, m20 = l(sc), l(m1), l(m2), l(m3), l(m4), l(m5), l(m6), l(m7), l(m8), l(m9), l(m10), l(m11), l(m12), l(m13), l(m14), l(m15), l(m16), l(m17), l(m18), l(m19), l(m20)
+	sc, m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11, m12, m13, m14, m15, m16, m17,
+	m18, m19, m20 = l(sc), l(m1), l(m2), l(m3), l(m4), l(m5), l(m6), l(m7), l(m8), l(m9),
+	l(m10), l(m11), l(m12), l(m13), l(m14), l(m15), l(m16), l(m17), l(m18), l(m19), l(m20)
 	if sc and sc.class then
-		sc, m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11, m12, m13, m14, m15, m16, m17, m18, m19, m20 = Class, sc, m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11, m12, m13, m14, m15, m16, m17, m18, m19
+		sc, m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11, m12, m13,
+		m14, m15, m16, m17, m18, m19, m20 = Class, sc, m1, m2, m3, m4,
+		m5, m6, m7, m8, m9, m10, m11, m12, m13, m14, m15, m16, m17, m18, m19
 	end
 	sc = sc or Class
 	local key = getcomplexuid(sc, m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11, m12, m13, m14, m15, m16, m17, m18, m19, m20)
 	if not pool[key] then
-		local class = Class(sc, m1, m2, m3, m4, m5, m6, m7, m8, m9,
-			m10, m11, m12, m13, m14, m15, m16, m17,
-		m18, m19, m20)
+		local class = Class(sc, m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11, m12, m13, m14, m15, m16, m17, m18, m19, m20)
 		if not classmeta then
 			classmeta = {}
 			local mt = getmetatable(class)

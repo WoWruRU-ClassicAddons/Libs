@@ -1,17 +1,17 @@
 --[[
-	Name: RosterLib-2.0
-	Revision: $Revision: 16213 $
-	X-ReleaseDate: $Date: 2006-08-10 08:55:29 +0200 (Thu, 10 Aug 2006) $
-	Author: Maia (maia.proudmoore@gmail.com)
-	Website: http://wiki.wowace.com/index.php/RosterLib-2.0
-	Documentation: http://wiki.wowace.com/index.php/RosterLib-2.0_API_Documentation
-	SVN: http://svn.wowace.com/root/trunk/RosterLib-2.0/
-	Description: party/raid roster management
-	Dependencies: AceLibrary, AceOO-2.0, AceEvent-2.0
+Name: RosterLib-2.0
+Revision: $Revision: 17213 $
+X-ReleaseDate: $Date: 2006-08-10 08:55:29 +0200 (Thu, 10 Aug 2006) $
+Author: Maia (maia.proudmoore@gmail.com)
+Website: http://wiki.wowace.com/index.php/RosterLib-2.0
+Documentation: http://wiki.wowace.com/index.php/RosterLib-2.0_API_Documentation
+SVN: http://svn.wowace.com/root/trunk/RosterLib-2.0/
+Description: party/raid roster management
+Dependencies: AceLibrary, AceOO-2.0, AceEvent-2.0
 ]]
 
 local MAJOR_VERSION = "RosterLib-2.0"
-local MINOR_VERSION = "$Revision: 16213 $"
+local MINOR_VERSION = "$Revision: 17213 $"
 
 if not AceLibrary then error(vmajor .. " requires AceLibrary.") end
 if not AceLibrary:IsNewVersion(MAJOR_VERSION, MINOR_VERSION) then return end
@@ -62,12 +62,12 @@ end
 
 
 function RosterLib:Enable()
-	-- not used anymore, but as addons still might be calling this method, we're keeping it.
+-- not used anymore, but as addons still might be calling this method, we're keeping it.
 end
 
 
 function RosterLib:Disable()
-	-- not used anymore, but as addons still might be calling this method, we're keeping it.
+-- not used anymore, but as addons still might be calling this method, we're keeping it.
 end
 
 ------------------------------------------------
@@ -120,7 +120,7 @@ local function NextUnit()
 			unitcount = unitcount + 1
 			if UnitExists(unit) then return unit end
 		end
-		-- STEP 4: party units
+	-- STEP 4: party units
 	elseif pmem > 0 then
 		-- STEP 3a: pet units
 		for i = petcount, pmem do
@@ -279,8 +279,8 @@ function RosterLib:CreateOrUpdateUnit(unitid)
 			_,roster[name].class = UnitClass(unitid)
 		end
 		-- subgroup and rank
-		if GetNumRaidMembers() > 0 then
-			local _,_,num = string.find(unitid, "(%d+)")
+		local _,_,num = string.find(unitid, "(%d+)")
+		if GetNumRaidMembers() > 0 and num then
 			_,roster[name].rank,roster[name].subgroup = GetRaidRosterInfo(num)
 		else
 			roster[name].subgroup = 1
@@ -288,16 +288,16 @@ function RosterLib:CreateOrUpdateUnit(unitid)
 		end
 		-- online/offline status
 		roster[name].online = UnitIsConnected(unitid)
-		
+
 		-- compare data
 		if not old
-			or roster[name].name     ~= old.name
-			or roster[name].unitid   ~= old.unitid
-			or roster[name].class    ~= old.class
-			or roster[name].subgroup ~= old.subgroup
-			or roster[name].rank     ~= old.rank
-			or roster[name].online   ~= old.online
-			then
+		or roster[name].name     ~= old.name
+		or roster[name].unitid   ~= old.unitid
+		or roster[name].class    ~= old.class
+		or roster[name].subgroup ~= old.subgroup
+		or roster[name].rank     ~= old.rank
+		or roster[name].online   ~= old.online
+		then
 			updatedUnits[name]             = Compost and Compost:Acquire() or {}
 			updatedUnits[name].oldname     = (old and old.name) or nil
 			updatedUnits[name].oldunitid   = (old and old.unitid) or nil
@@ -384,7 +384,7 @@ function RosterLib:IterateRoster(pets)
 		repeat
 			key = next(roster, key)
 		until (roster[key] == nil or pets or roster[key].class ~= "PET")
-		
+
 		return roster[key]
 	end
 end

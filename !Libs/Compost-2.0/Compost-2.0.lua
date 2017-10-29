@@ -31,7 +31,7 @@ local function activate(self, oldLib, oldDeactivate)
 			cache = {},
 			secondarycache = {},
 		}
-		
+
 		-- This makes the secondary cache table a weak table, any values in it will be reclaimed
 		-- during a GC if there are no other references to them
 		setmetatable(self.var.secondarycache, {__mode = "v"})
@@ -50,7 +50,7 @@ end
 -- or generates a new table if none available
 function lib:GetTable()
 	if lua51 or self.var.disabled then return {} end
-	
+
 	if table.getn(self.var.cache) > 0 then
 		for i in pairs(self.var.cache) do
 			local t = table.remove(self.var.cache, i)
@@ -65,7 +65,7 @@ function lib:GetTable()
 			end
 		end
 	end
-	
+
 	if next(self.var.secondarycache) then
 		for i in pairs(self.var.secondarycache) do
 			local t = table.remove(self.var.secondarycache, i)
@@ -80,7 +80,7 @@ function lib:GetTable()
 			end
 		end
 	end
-	
+
 	self:IncDec("numnew", 1)
 	return {}
 end

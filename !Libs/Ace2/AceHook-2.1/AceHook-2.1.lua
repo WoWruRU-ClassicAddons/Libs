@@ -239,7 +239,7 @@ local function hookFunction(self, func, handler, secure)
 	if not handler then
 		handler = func
 	end
-	
+
 	if registry[self][func] then
 		local uid = registry[self][func]
 		
