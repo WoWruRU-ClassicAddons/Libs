@@ -4360,7 +4360,7 @@ BabbleSpell:RegisterTranslations("frFR", function() return {
 	["Create Spellstone (Master)"] = "Create Spellstone (Master)", -- Need to translated 
 	["Create Spellstone"] = "Cr\195\169ation de Pierre de sort",
 	["Creeper Venom"] = "Creeper Venom", -- Need to translated 
-	["Cripple"] = "Cripple", -- Need to translated 
+	["Cripple"] = "Faiblesse", 
 	["Crippling Poison II"] = "Poison affaiblissant II",
 	["Crippling Poison"] = "Poison affaiblissant",
 	["Critical Mass"] = "Masse critique",
@@ -5285,7 +5285,7 @@ BabbleSpell:RegisterTranslations("frFR", function() return {
 	["Smoke Bomb"] = "Smoke Bomb", -- Need to translated 
 	["Snap Kick"] = "Snap Kick", -- Need to translated 
 	["Solid Sharpening Stone"] = "Pierre \195\160 aiguiser solide",
-	["Sonic Burst"] = "Sonic Burst", -- Need to translated 
+	["Sonic Burst"] = "Explosion sonore",
 	["Soothe Animal"] = "Apaiser les animaux",
 	["Soothing Kiss"] = "Baiser apaisant",
 	["Soul Bite"] = "Soul Bite", -- Need to translated 
@@ -5377,7 +5377,7 @@ BabbleSpell:RegisterTranslations("frFR", function() return {
 	["Throwing Weapon Specialization"] = "Sp\195\169cialisation Armes de jet",
 	["Thrown"] = "Armes de jet",
 	["Thunder Clap"] = "Coup de tonnerre",
-	["Thunderclap"] = "Thunderclap", -- Need to translated 
+	["Thunderclap"] = "Coup de tonnerre",
 	["Thunderfury"] = "Thunderfury", -- Need to translated 
 	["Thundering Strikes"] = "Frappe foudroyante",
 	["Thundershock"] = "Thundershock", -- Need to translated 
@@ -5727,7 +5727,7 @@ BabbleSpell:RegisterTranslations("zhCN", function() return {
 	["Create Spellstone (Master)"] = "Create Spellstone (Master)", -- Need to translated 
 	["Create Spellstone"] = "制造法术石",
 	["Creeper Venom"] = "Creeper Venom", -- Need to translated
-	["Cripple"] = "Cripple", -- Need to translated
+	["Cripple"] = "残废术",
 	["Crippling Poison II"] = "致残毒药 II",
 	["Crippling Poison"] = "致残毒药",
 	["Critical Mass"] = "火焰重击",
@@ -6652,7 +6652,7 @@ BabbleSpell:RegisterTranslations("zhCN", function() return {
 	["Smoke Bomb"] = "Smoke Bomb", -- Need to translated
 	["Snap Kick"] = "Snap Kick", -- Need to translated
 	["Solid Sharpening Stone"] = "坚固的磨刀石",
-	["Sonic Burst"] = "Sonic Burst", -- Need to translated
+	["Sonic Burst"] = "音爆",
 	["Soothe Animal"] = "安抚动物",
 	["Soothing Kiss"] = "安抚之吻",
 	["Soul Bite"] = "Soul Bite", -- Need to translated
@@ -6744,7 +6744,7 @@ BabbleSpell:RegisterTranslations("zhCN", function() return {
 	["Throwing Weapon Specialization"] = "投掷武器专精",
 	["Thrown"] = "投掷",
 	["Thunder Clap"] = "雷霆一击",
-	["Thunderclap"] = "Thunderclap", -- Need to translated
+	["Thunderclap"] = "雷霆一击",
 	["Thunderfury"] = "Thunderfury", -- Need to translated
 	["Thundering Strikes"] = "雷鸣猛击",
 	["Thundershock"] = "Thundershock", -- Need to translated
@@ -8111,7 +8111,7 @@ BabbleSpell:RegisterTranslations("zhTW", function() return {
 	["Throwing Weapon Specialization"] = "投擲武器專精",
 	["Thrown"] = "投擲",
 	["Thunder Clap"] = "雷霆一擊",
-	["Thunderclap"] = "Thunderclap", -- Need to translated
+	["Thunderclap"] = "雷霆一擊",
 	["Thunderfury"] = "Thunderfury", -- Need to translated
 	["Thundering Strikes"] = "雷鳴猛擊",
 	["Thundershock"] = "Thundershock", -- Need to translated
@@ -8461,7 +8461,7 @@ BabbleSpell:RegisterTranslations("koKR", function() return {
 	["Create Spellstone (Master)"] = "Create Spellstone (Master)", -- Need to translated 
 	["Create Spellstone"] = "주문석 창조",
 	["Creeper Venom"] = "Creeper Venom", -- Need to translated
-	["Cripple"] = "Cripple", -- Need to translated
+	["Cripple"] = "신경 마비",
 	["Crippling Poison II"] = "신경 마비 독 II",
 	["Crippling Poison"] = "신경 마비 독",
 	["Critical Mass"] = "화염 결집",
@@ -9386,7 +9386,7 @@ BabbleSpell:RegisterTranslations("koKR", function() return {
 	["Smoke Bomb"] = "Smoke Bomb", -- Need to translated
 	["Snap Kick"] = "Snap Kick", -- Need to translated
 	["Solid Sharpening Stone"] = "견고한 숫돌",
-	["Sonic Burst"] = "Sonic Burst", -- Need to translated
+	["Sonic Burst"] = "음파 폭발",
 	["Soothe Animal"] = "동물 달래기",
 	["Soothing Kiss"] = "유혹의 입맞춤",
 	["Soul Bite"] = "Soul Bite", -- Need to translated
@@ -9478,7 +9478,7 @@ BabbleSpell:RegisterTranslations("koKR", function() return {
 	["Throwing Weapon Specialization"] = "투척 무기류 전문화",
 	["Thrown"] = "투척",
 	["Thunder Clap"] = "천둥벼락",
-	["Thunderclap"] = "Thunderclap", -- Need to translated
+	["Thunderclap"] = "천둥벼락",
 	["Thunderfury"] = "Thunderfury", -- Need to translated
 	["Thundering Strikes"] = "우레의 일격",
 	["Thundershock"] = "Thundershock", -- Need to translated
