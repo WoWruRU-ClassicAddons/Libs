@@ -26,28 +26,31 @@ local Dewdrop = AceLibrary:HasInstance("Dewdrop-2.0") and AceLibrary("Dewdrop-2.
 local epsilon = 1e-5
 local _G = getfenv(0)
 
-if GetLocale() == "ruRU" then
-	SHOW_ICON = "Показать иконку"
-	SHOW_ICON_DESC = "Показать иконку плагина на панели."
-	SHOW_TEXT = "Показать текст"
-	SHOW_TEXT_DESC = "Показать текст плагина на панели."
-	SHOW_COLORED_TEXT = "Показать цветной текст"
-	SHOW_COLORED_TEXT_DESC = "Всегда окрашивать плагину этот текст."
-	DETACH_TOOLTIP = "Отделить меню"
-	DETACH_TOOLTIP_DESC = "Отделить окно меню от панели."
-	LOCK_TOOLTIP = "Закрепить меню"
-	LOCK_TOOLTIP_DESC = "Закрепить окно меню. Когда меню закрепленно, вы можете использовать Alt+ЛКМ."
-	POSITION = "Положение"
-	POSITION_DESC = "Положение плагина на панели."
-	POSITION_LEFT = "Слева"
-	POSITION_RIGHT = "Справа"
-	POSITION_CENTER = "По центру"
-	ATTACH_TO_MINIMAP = "Прикрепить к мини-карте"
-	ATTACH_TO_MINIMAP_DESC = "Прикрепить плагин к мини-карте."
-	HIDE_FUBAR_PLUGIN = "Скрыть плагин"
-	HIDE_FUBAR_PLUGIN_CMD = "Hidden"
-	HIDE_FUBAR_PLUGIN_DESC = "Скрыть плагин с панели или мини-карты."
-elseif GetLocale() == "koKR" then
+local SHOW_ICON = "Show icon"
+local SHOW_ICON_DESC = "Show the plugins icon on the panel."
+local SHOW_TEXT = "Show text"
+local SHOW_TEXT_DESC = "Show the plugins text on the panel."
+local SHOW_COLORED_TEXT = "Show colored text"
+local SHOW_COLORED_TEXT_DESC = "Allow the plugin to color its text."
+local DETACH_TOOLTIP = "Detach tooltip"
+local DETACH_TOOLTIP_DESC = "Detach the tooltip from the panel."
+local LOCK_TOOLTIP = "Lock tooltip"
+local LOCK_TOOLTIP_DESC = "Lock the tooltips position. When the tooltip is locked, you must use Alt to access it with your mouse."
+local POSITION = "Position"
+local POSITION_DESC = "Position the plugin on the panel."
+local POSITION_LEFT = "Left"
+local POSITION_RIGHT = "Right"
+local POSITION_CENTER = "Center"
+local ATTACH_TO_MINIMAP = "Attach to minimap"
+local ATTACH_TO_MINIMAP_DESC = "Attach the plugin to the minimap instead of the panel."
+local HIDE_FUBAR_PLUGIN = "Hide plugin"
+local HIDE_FUBAR_PLUGIN_CMD = "Hidden"
+local HIDE_FUBAR_PLUGIN_DESC = "Hide the plugin from the panel or minimap, leaving the addon running."
+local OTHER = "Other"
+local CLOSE = "Close"
+local CLOSE_DESC = "Close the menu."
+
+if GetLocale() == "koKR" then
 	SHOW_ICON = "아이콘 표시"
 	SHOW_ICON_DESC = "패널에 플러그인 아이콘을 표시합니다."
 	SHOW_TEXT = "텍스트 표시"
@@ -68,6 +71,9 @@ elseif GetLocale() == "koKR" then
 	HIDE_FUBAR_PLUGIN = "FuBar 플러그인 숨기기"
 	HIDE_FUBAR_PLUGIN_CMD = "숨겨짐"
 	HIDE_FUBAR_PLUGIN_DESC = "패널에서 플러그인을 숨깁니다."
+	OTHER = "기타"
+	CLOSE = "닫기"
+	CLOSE_DESC = "메뉴 닫기."
 elseif GetLocale() == "deDE" then
 	SHOW_ICON = "Zeige Icon"
 	SHOW_ICON_DESC = "Zeige das Plugin-Icon auf der Leiste."
@@ -89,6 +95,8 @@ elseif GetLocale() == "deDE" then
 	HIDE_FUBAR_PLUGIN = "Versteckt das FuBar Plugin"
 	HIDE_FUBAR_PLUGIN_CMD = "Verstecken"
 	HIDE_FUBAR_PLUGIN_DESC = "Versteckt das Plugin von der Leiste."
+	CLOSE = "Schlie\195\159en"
+	CLOSE_DESC = "Men\195\188 schlie\195\159en."
 elseif GetLocale() == "frFR" then
 	SHOW_ICON = "Afficher l'ic\195\180ne"
 	SHOW_ICON_DESC = "Afficher l'ic\195\180ne du plugin sur le panneau."
@@ -99,49 +107,55 @@ elseif GetLocale() == "frFR" then
 	DETACH_TOOLTIP = "D\195\169tacher le tooltip"
 	DETACH_TOOLTIP_DESC = "Permet de d\195\169tacher le tooltip du panneau."
 	LOCK_TOOLTIP = "Bloquer le tooltip"
-	LOCK_TOOLTIP_DESC = "Permet de bloquer le tooltip \195\160 sa position actuelle."
+	LOCK_TOOLTIP_DESC = "Permet de bloquer le tooltip \195\160 sa position actuelle. Une fois le tooltip bloqu\195\169, vous devez utiliser la touche Alt pour le d\195\169placer avec votre souris."
 	POSITION = "Position"
 	POSITION_DESC = "Permet de changer la position du plugin dans le panneau."
 	POSITION_LEFT = "Gauche"
 	POSITION_RIGHT = "Droite"
 	POSITION_CENTER = "Centre"
 	ATTACH_TO_MINIMAP = "Attacher \195\160 la minicarte"
-	ATTACH_TO_MINIMAP_DESC = "Atteche l'ic\195\180ne du plugin \195\160 la minicarte."
+	ATTACH_TO_MINIMAP_DESC = "Attache l'ic\195\180ne du plugin \195\160 la minicarte."
 	HIDE_FUBAR_PLUGIN = "Masquer le plugin"
 	HIDE_FUBAR_PLUGIN_CMD = "Masqu\195\169"
-	HIDE_FUBAR_PLUGIN_DESC = "Permet de masquer compl\195\168tement le plugin du panneau."
+	HIDE_FUBAR_PLUGIN_DESC = "Permet de masquer compl\195\168tement le plugin du panneau, mais laisse l'addon fonctionner."
+	OTHER = "Autre"
+	CLOSE = "Fermer"
+	CLOSE_DESC = "Ferme le menu."
 elseif GetLocale() == "zhCN" then
 	SHOW_ICON = "显示图标"
-	SHOW_ICON_DESC = "在面板上显示插件图标."
+	SHOW_ICON_DESC = "在面板上显示插件图标。"
 	SHOW_TEXT = "显示文字"
-	SHOW_TEXT_DESC = "在面板上显示文字标题."
+	SHOW_TEXT_DESC = "在面板上显示文字标题。"
 	SHOW_COLORED_TEXT = "显示彩色文字"
-	SHOW_COLORED_TEXT_DESC = "允许插件显示彩色文字."
+	SHOW_COLORED_TEXT_DESC = "允许插件显示彩色文字。"
 	DETACH_TOOLTIP = "独立提示信息"
-	DETACH_TOOLTIP_DESC = "从面板上独立提示信息."
+	DETACH_TOOLTIP_DESC = "从面板上独立提示信息。"
 	LOCK_TOOLTIP = "锁定提示信息"
-	LOCK_TOOLTIP_DESC = "锁定提示信息位置."
+	LOCK_TOOLTIP_DESC = "锁定提示信息位置。"
 	POSITION = "位置"
-	POSITION_DESC = "插件在面板上的位置."
+	POSITION_DESC = "插件在面板上的位置。"
 	POSITION_LEFT = "居左"
 	POSITION_RIGHT = "居右"
 	POSITION_CENTER = "居中"
 	ATTACH_TO_MINIMAP = "依附在小地图"
-	ATTACH_TO_MINIMAP_DESC = "插件图标依附在小地图而不显示在面板上."
-	HIDE_FUBAR_PLUGIN = "隐藏FuBar插件"
-	HIDE_FUBAR_PLUGIN_CMD = "Hidden"
-	HIDE_FUBAR_PLUGIN_DESC = "在面板上隐藏该插件."
+	ATTACH_TO_MINIMAP_DESC = "插件图标依附在小地图而不显示在面板上。"
+	HIDE_FUBAR_PLUGIN = "隐藏 FuBar 插件"
+	HIDE_FUBAR_PLUGIN_CMD = "隐藏"
+	HIDE_FUBAR_PLUGIN_DESC = "在面板上隐藏该插件。"
+	OTHER = "其他"
+	CLOSE = "关闭"
+	CLOSE_DESC = "关闭菜单"
 elseif GetLocale() == "zhTW" then
 	SHOW_ICON = "顯示圖示"
 	SHOW_ICON_DESC = "在面板上顯示插件圖示。"
 	SHOW_TEXT = "顯示文字"
-	SHOW_TEXT_DESC = "在面板上顯示文字標題。"
-	SHOW_COLORED_TEXT = "顯示彩色文字"
-	SHOW_COLORED_TEXT_DESC = "允許插件顯示彩色文字。"
+	SHOW_TEXT_DESC = "在面板上顯示插件文字。"
+	SHOW_COLORED_TEXT = "允許彩色文字"
+	SHOW_COLORED_TEXT_DESC = "允許插件在面板上使用彩色文字。"
 	DETACH_TOOLTIP = "獨立提示訊息"
 	DETACH_TOOLTIP_DESC = "從面板上獨立提示訊息。"
 	LOCK_TOOLTIP = "鎖定提示訊息"
-	LOCK_TOOLTIP_DESC = "鎖定提示訊息位置。"
+	LOCK_TOOLTIP_DESC = "鎖定提示訊息位置。當提示訊息鎖定時，需要用Alt鍵使用提示訊息的功能。"
 	POSITION = "位置"
 	POSITION_DESC = "插件在面板上的位置。"
 	POSITION_LEFT = "靠左"
@@ -149,33 +163,64 @@ elseif GetLocale() == "zhTW" then
 	POSITION_CENTER = "置中"
 	ATTACH_TO_MINIMAP = "依附在小地圖"
 	ATTACH_TO_MINIMAP_DESC = "插件圖標依附在小地圖而不顯示在面板上。"
-	HIDE_FUBAR_PLUGIN = "隱藏FuBar插件"
-	HIDE_FUBAR_PLUGIN_CMD = "Hidden"
-	HIDE_FUBAR_PLUGIN_DESC = "在面板上隱藏該插件."
-else
-	SHOW_ICON = "Show icon"
-	SHOW_ICON_DESC = "Show the plugins icon on the panel."
-	SHOW_TEXT = "Show text"
-	SHOW_TEXT_DESC = "Show the plugins text on the panel."
-	SHOW_COLORED_TEXT = "Show colored text"
-	SHOW_COLORED_TEXT_DESC = "Allow the plugin to color its text."
-	DETACH_TOOLTIP = "Detach tooltip"
-	DETACH_TOOLTIP_DESC = "Detach the tooltip from the panel."
-	LOCK_TOOLTIP = "Lock tooltip"
-	LOCK_TOOLTIP_DESC = "Lock the tooltips position. When the tooltip is locked, you must use Alt to access it with your mouse."
-	POSITION = "Position"
-	POSITION_DESC = "Position the plugin on the panel."
-	POSITION_LEFT = "Left"
-	POSITION_RIGHT = "Right"
-	POSITION_CENTER = "Center"
-	ATTACH_TO_MINIMAP = "Attach to minimap"
-	ATTACH_TO_MINIMAP_DESC = "Attach the plugin to the minimap instead of the panel."
-	HIDE_FUBAR_PLUGIN = "Hide plugin"
-	HIDE_FUBAR_PLUGIN_CMD = "Hidden"
-	HIDE_FUBAR_PLUGIN_DESC = "Hide the plugin from the panel or minimap, leaving the addon running."
+	HIDE_FUBAR_PLUGIN = "隱藏插件"
+	HIDE_FUBAR_PLUGIN_CMD = "隱藏"
+	HIDE_FUBAR_PLUGIN_DESC = "在面板或小地圖上隱藏該插件，但保持執行狀態。"
+	OTHER = "其他"
+	CLOSE = "關閉"
+	CLOSE_DESC = "關閉選單。"
+elseif GetLocale() == "esES" then
+	SHOW_ICON = "Mostrar icono"
+	SHOW_ICON_DESC = "Muestra el icono del plugin en el panel"
+	SHOW_TEXT = "Mostrar texto"
+	SHOW_TEXT_DESC = "Muestra el texto del plugin en el panel"
+	SHOW_COLORED_TEXT = "Mostrar el texto en color"
+	SHOW_COLORED_TEXT_DESC = "Permite al plugin colorear su texto"
+	DETACH_TOOLTIP = "Separar tooltip"
+	DETACH_TOOLTIP_DESC = "Separa el tooltip del panel"
+	LOCK_TOOLTIP = "Bloquear tooltip"
+	LOCK_TOOLTIP_DESC = "Bloquea la posici\195\179n de los tooltips. Cuando el tooltip est\195\161 bloqueado debes usar Alt para acceder a \195\169l con el rat\195\179n"
+	POSITION = "Posici\195\179n"
+	POSITION_DESC = "Posici\195\179n del plugin en el panel"
+	POSITION_LEFT = "Izquierda"
+	POSITION_RIGHT = "Derecha"
+	POSITION_CENTER = "Centro"
+	ATTACH_TO_MINIMAP = "Adjuntar al minimapa"
+	ATTACH_TO_MINIMAP_DESC = "Adjunta el plugin al minimapa en vez de al panel."
+	HIDE_FUBAR_PLUGIN = "Ocultar plugin"
+	HIDE_FUBAR_PLUGIN_CMD = "Oculto"
+	HIDE_FUBAR_PLUGIN_DESC = "Oculta el plugin del panel o minimapa, dejando el accesorio funcionando."
+	OTHER = "Otros"
+	CLOSE = "Cerrar"
+	CLOSE_DESC = "Cierra el men\195\186."
+elseif GetLocale() == "ruRU" then
+	SHOW_ICON = "Показывать иконку"
+	SHOW_ICON_DESC = "Показывать иконку плагина на панели."
+	SHOW_TEXT = "Показывать текст"
+	SHOW_TEXT_DESC = "Показывать текст плагина на панели."
+	SHOW_COLORED_TEXT = "Показывать цветной текст"
+	SHOW_COLORED_TEXT_DESC = "Позволить плагину использовать его цвета в тексте."
+	DETACH_TOOLTIP = "Отделить подсказку"
+	DETACH_TOOLTIP_DESC = "Отделить всплывающую подсказку от панели."
+	LOCK_TOOLTIP = "Закрепить подсказку"
+	LOCK_TOOLTIP_DESC = "Закрепить позицию всплывающей подсказки. Когда всплывающая подсказка закреплена, используйте Alt для отображения ее у мыши."
+	POSITION = "Позиция"
+	POSITION_DESC = "Позиция плагина на панели."
+	POSITION_LEFT = "Слева"
+	POSITION_RIGHT = "Справа"
+	POSITION_CENTER = "По центру"
+	ATTACH_TO_MINIMAP = "Закрепить у мини-карты"
+	ATTACH_TO_MINIMAP_DESC = "Закрепить плагин у мини-карты, вместо панели."
+	HIDE_FUBAR_PLUGIN = "Скрыть плагин"
+	HIDE_FUBAR_PLUGIN_CMD = "Скрыть"
+	HIDE_FUBAR_PLUGIN_DESC = "Скрыть плагин с панели или мини-карты, но оставить аддон в рабочем состоянии."
+	OTHER = "Другое"
+	CLOSE = "Закрыть"
+	CLOSE_DESC = "Закрыть меню."
 end
 
-local FuBarPlugin = AceLibrary("AceOO-2.0").Mixin {
+local AceOO = AceLibrary("AceOO-2.0")
+local FuBarPlugin = AceOO.Mixin {
 	"GetTitle",
 	"GetName",
 	"GetCategory",
@@ -243,7 +288,7 @@ function FuBarPlugin:GetName()
 end
 
 function FuBarPlugin:GetCategory()
-	return self.category or "Other"
+	return self.category or OTHER
 end
 
 function FuBarPlugin:GetFrame()
@@ -896,6 +941,8 @@ function FuBarPlugin:OpenMenu(frame)
 				if level == 1 then
 					Dewdrop:AddLine(
 						'text', CLOSE,
+						'tooltipTitle', CLOSE,
+						'tooltipText', CLOSE_DESC,
 						'func', Dewdrop.Close,
 						'arg1', Dewdrop
 					)
@@ -1024,7 +1071,6 @@ function FuBarPlugin.OnEmbedEnable(FuBarPlugin, self)
 	if CheckFuBar() and AceLibrary:HasInstance("AceConsole-2.0") then
 		if not recheckPlugins then
 			local AceConsole = AceLibrary("AceConsole-2.0")
-			local AceOO = AceLibrary("AceOO-2.0")
 			function recheckPlugins()
 				for k,v in pairs(AceConsole.registry) do
 					if type(v) == "table" and v.args and AceOO.inherits(v.handler, FuBarPlugin) and not v.independentProfile then
@@ -1074,7 +1120,7 @@ function FuBarPlugin.GetAceOptionsDataTable(FuBarPlugin, self)
 			set = "ToggleIconShown",
 			get = "IsIconShown",
 			hidden = function()
-				return not self.hasIcon or self.hasNoText or self:IsDisabled() or self:IsMinimapAttached() or not self.db
+				return self.cannotHideIcon or not self.hasIcon or self.hasNoText or self:IsDisabled() or self:IsMinimapAttached() or not self.db
 			end,
 			order = -13.7,
 			handler = self,
