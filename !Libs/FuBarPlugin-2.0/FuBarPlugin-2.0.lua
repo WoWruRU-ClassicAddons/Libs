@@ -1659,32 +1659,13 @@ function MinimapContainer:RemovePlugin(index)
 	return true
 end
 
-local MinimapShapes = {
-	-- quadrant booleans (same order as SetTexCoord)
-	-- {upper-left, lower-left, upper-right, lower-right}
-	-- true = rounded, false = squared
-	["ROUND"]					= {true,  true,  true,  true },
-	["SQUARE"]					= {false, false, false, false},
-	["CORNER-TOPLEFT"]			= {true,  false, false, false},
-	["CORNER-TOPRIGHT"]			= {false, false, true,  false},
-	["CORNER-BOTTOMLEFT"]		= {false, true,  false, false},
-	["CORNER-BOTTOMRIGHT"]		= {false, false, false, true },
-	["SIDE-LEFT"]				= {true,  true,  false, false},
-	["SIDE-RIGHT"]				= {false, false, true,  true },
-	["SIDE-TOP"]				= {true,  false, true,  false},
-	["SIDE-BOTTOM"]				= {false, true,  false, true },
-	["TRICORNER-TOPLEFT"]		= {true,  true,  true,  false},
-	["TRICORNER-TOPRIGHT"]		= {true,  false, true,  true },
-	["TRICORNER-BOTTOMLEFT"]	= {true,  true,  false, true },
-	["TRICORNER-BOTTOMRIGHT"]	= {false, true,  true,  true },
-}
-
 local function GetMinimapShape() -- in 1.12.1 this API does not exist, so you need to specify which shape of minimap is used in certain addons. For all others, the default type of ROUND
 	local minimapShape = "ROUND"
 	if Squeenix or CornerMinimap or SquareMinimap then
 		minimapShape = "SQUARE"
 	elseif simpleMinimap_Skins then
-		local skins ={ "ROUND",
+		local skins ={
+			"ROUND",
 			"SQUARE",
 			"CORNER-BOTTOMLEFT",
 			"CORNER-BOTTOMRIGHT",
@@ -1697,6 +1678,26 @@ local function GetMinimapShape() -- in 1.12.1 this API does not exist, so you ne
 	end
 	return minimapShape
 end
+
+local MinimapShapes = {
+	-- quadrant booleans (same order as SetTexCoord)
+	-- {bottom-right, bottom-left, top-right, top-left}
+	-- true = rounded, false = squared
+	["ROUND"] 					= {true,  true,  true,  true },
+	["SQUARE"] 					= {false, false, false, false},
+	["CORNER-TOPLEFT"] 			= {false, false, false, true },
+	["CORNER-TOPRIGHT"] 		= {false, false, true,  false},
+	["CORNER-BOTTOMLEFT"] 		= {false, true,  false, false},
+	["CORNER-BOTTOMRIGHT"]	 	= {true,  false, false, false},
+	["SIDE-LEFT"] 				= {false, true,  false, true },
+	["SIDE-RIGHT"] 				= {true,  false, true,  false},
+	["SIDE-TOP"] 				= {false, false, true,  true },
+	["SIDE-BOTTOM"] 			= {true,  true,  false, false},
+	["TRICORNER-TOPLEFT"] 		= {false, true,  true,  true },
+	["TRICORNER-TOPRIGHT"] 		= {true,  false, true,  true },
+	["TRICORNER-BOTTOMLEFT"] 	= {true,  true,  false, true },
+	["TRICORNER-BOTTOMRIGHT"] 	= {true,  true,  true,  false},
+}
 
 function MinimapContainer:ReadjustLocation(plugin)
 	local frame = plugin.minimapFrame
@@ -1711,35 +1712,21 @@ function MinimapContainer:ReadjustLocation(plugin)
 		else
 			position = plugin.minimapPosition or plugin.defaultMinimapPosition or math.random(1, 360)
 		end
-		self:UpdateButtonPosition(frame, position)
+		local angle = math.rad(position or 0) -- determine position on your own
+		local x, y, q = math.cos(angle), math.sin(angle), 1
+		if x < 0 then q = q + 1	end
+		if y > 0 then q = q + 2	end
+		local minimapShape = GetMinimapShape()
+		local quadTable = MinimapShapes[minimapShape]
+		if quadTable[q] then
+			x, y = x*80, y*80
+		else
+			local diagRadius = math.sqrt(2*(80)^2)-10
+			x = math.max(-80, math.min(x*diagRadius, 80))
+			y = math.max(-80, math.min(y*diagRadius, 80))
+		end
+		frame:SetPoint("CENTER", Minimap, "CENTER", x, y)
 	end
-end
-
-function MinimapContainer:UpdateButtonPosition(frame, position, rounding)
-	if not rounding then rounding = 0 end
-	local radius = (Minimap:GetTop()-Minimap:GetBottom())/2
-	local angle = math.rad(position) -- determine position on your own
-	local x = math.sin(angle)
-	local y = math.cos(angle)
-	local q = 1
-	
-	if x < 0 then
-		q = q + 1	-- lower
-	end
-	if y > 0 then
-		q = q + 2	-- right
-	end
-	local minimapShape = GetMinimapShape()
-	local quadTable = MinimapShapes[minimapShape]
-	if quadTable[q] then
-		x = x*radius
-		y = y*radius
-	else
-		local diagRadius = math.sqrt(2*(radius)^2)-rounding
-		x = math.max(-radius, math.min(x*diagRadius, radius))
-		y = math.max(-radius, math.min(y*diagRadius, radius))
-	end
-	frame:SetPoint("CENTER", Minimap, "CENTER", x, y)
 end
 
 function MinimapContainer:GetPlugin(index)
@@ -1790,12 +1777,7 @@ function MinimapContainer.OnUpdate()
 		local px, py = GetCursorPosition()
 		local scale = UIParent:GetEffectiveScale()
 		px, py = px / scale, py / scale
-		local position = math.deg(math.atan2(py - my, px - mx))
-		if position <= 0 then
-			position = position + 360
-		elseif position > 360 then
-			position = position - 360
-		end
+		local position = math.mod(math.deg(math.atan2(py - my, px - mx)), 360)
 		if this.self.db then
 			this.self.db.profile.minimapPosition = position
 			this.self.db.profile.minimapPositionX = nil
