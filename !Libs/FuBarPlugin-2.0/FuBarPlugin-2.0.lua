@@ -1,17 +1,20 @@
 --[[
 	Name: FuBarPlugin-2.0
-	Revision: $Rev: 16321 $
+	Revision: $Rev: 90000 $
 	Author: Cameron Kenneth Knight (ckknight@gmail.com)
 	Website: http://wiki.wowace.com/index.php/FuBarPlugin-2.0
 	Documentation: http://wiki.wowace.com/index.php/FuBarPlugin-2.0
-	SVN: svn://svn.wowace.com/root/branches/FuBar/FuBarPlugin-2.0/FuBarPlugin-2.0/
+	SVN: svn://svn.wowace.com/wowace/trunk/FuBarPlugin-2.0/FuBarPlugin-2.0/
 	Description: Plugin for FuBar.
-	Dependencies: AceLibrary, AceOO-2.0, AceEvent-2.0, Tablet-2.0, Dewdrop-2.0
+	Dependencies: AceLibrary, AceOO-2.0, AceEvent-2.0, (optional) Tablet-2.0, Dewdrop-2.0
+	License: LGPL v2.1
+	
+	Notes: When embeding this library, FuBar should be set as an optional dependency.
 ]]
 
 local MAJOR_VERSION = "FuBarPlugin-2.0"
 local MINIMAPCONTAINER_MAJOR_VERSION = "FuBarPlugin-MinimapContainer-2.0"
-local MINOR_VERSION = "$Revision: 16321 $"
+local MINOR_VERSION = "$Revision: 90000 $"
 
 -- This ensures the code is only executed if the libary doesn't already exist, or is a newer version
 if not AceLibrary then error(MAJOR_VERSION .. " requires AceLibrary.") end
@@ -22,6 +25,7 @@ if not AceLibrary:HasInstance("AceOO-2.0") then error(MAJOR_VERSION .. " require
 local AceEvent = AceLibrary:HasInstance("AceEvent-2.0") and AceLibrary("AceEvent-2.0")
 local Tablet = AceLibrary:HasInstance("Tablet-2.0") and AceLibrary("Tablet-2.0")
 local Dewdrop = AceLibrary:HasInstance("Dewdrop-2.0") and AceLibrary("Dewdrop-2.0")
+local AceAddon
 
 local epsilon = 1e-5
 local _G = getfenv(0)
@@ -264,6 +268,7 @@ local FuBarPlugin = AceOO.Mixin {
 	"OpenMenu",
 	"AddImpliedMenuOptions",
 }
+local MinimapContainer
 
 local good = nil
 local function CheckFuBar()
@@ -275,7 +280,9 @@ end
 
 function FuBarPlugin:GetTitle()
 	local name = self.title or self.name
-	FuBarPlugin:assert(name, "You must provide self.title or self.name")
+	if not name then
+		FuBarPlugin:error("You must provide self.title or self.name")
+	end
 	local _,_,title = string.find(name, "FuBar %- (.-)%s*$")
 	if not title then
 		title = name
@@ -304,7 +311,9 @@ function FuBarPlugin:IsTextColored()
 end
 
 function FuBarPlugin:ToggleTextColored()
-	FuBarPlugin:assert(self.db, "Cannot change text color if self.db is not available. (" .. self:GetTitle() .. ")")
+	if not self.db then
+		FuBarPlugin:error("Cannot change text color if self.db is not available. (" .. self:GetTitle() .. ")")
+	end
 	self.db.profile.uncolored = not self.db.profile.uncolored or nil
 	self:UpdateText()
 end
@@ -316,12 +325,16 @@ function FuBarPlugin:ToggleMinimapAttached()
 			if self.panel then
 				self.panel:RemovePlugin(self)
 			end
-			FuBar:GetPanel(1):AddPlugin(self, nil, self.defaultPosition)
+			if self.defaultPosition == "MINIMAP" then
+				FuBar:GetPanel(1):AddPlugin(self, nil, "LEFT")
+			else
+				FuBar:GetPanel(1):AddPlugin(self, nil, self.defaultPosition)
+			end
 		else
 			if self.panel then
 				self.panel:RemovePlugin(self)
 			end
-			AceLibrary(MINIMAPCONTAINER_MAJOR_VERSION):AddPlugin(self)
+			MinimapContainer:AddPlugin(self)
 		end
 	end
 	Dewdrop:Close()
@@ -331,7 +344,7 @@ function FuBarPlugin:IsMinimapAttached()
 	if not CheckFuBar() then
 		return true
 	end
-	return self.panel == AceLibrary(MINIMAPCONTAINER_MAJOR_VERSION)
+	return self.panel == MinimapContainer
 end
 
 function FuBarPlugin:Update()
@@ -364,6 +377,10 @@ function FuBarPlugin:UpdateText()
 end
 
 function FuBarPlugin:RegisterTablet()
+	if self.blizzardTooltip or self.overrideTooltip or not Tablet then
+		return
+	end
+	
 	if not Tablet:IsRegistered(self.frame) then
 		if self.db and self.db.profile and not self.db.profile.detachedTooltip then
 			self.db.profile.detachedTooltip = {}
@@ -420,10 +437,64 @@ function FuBarPlugin:RegisterTablet()
 			end,
 			'hideWhenEmpty', self.tooltipHiddenWhenEmpty
 		)
+		local func = self.frame:GetScript("OnEnter")
+		local function newFunc()
+			func()
+			
+			if FuBar and FuBar.IsHidingTooltipsInCombat and FuBar:IsHidingTooltipsInCombat() and InCombatLockdown() then
+				local frame = this.self.frame
+				if self.blizzardTooltip then
+					if GameTooltip:IsOwned(self:IsMinimapAttached() and self.minimapFrame or self.frame) then
+						GameTooltip:Hide()
+					end
+				elseif self.overrideTooltip and type(self.CloseTooltip) == "function" then
+					self:CloseTooltip()
+				elseif not self.overrideTooltip and Tablet and Tablet:IsAttached(frame) then
+					Tablet:Close(frame)
+				end
+			end
+		end
+		self.frame:SetScript("OnEnter", newFunc)
 	end
 end
 
 function FuBarPlugin:UpdateTooltip()
+	if self.blizzardTooltip then
+		if GameTooltip:IsOwned(self:IsMinimapAttached() and self.minimapFrame or self.frame) then
+			GameTooltip:Hide()
+			
+			local frame = self:IsMinimapAttached() and self.minimapFrame or self.frame
+			local anchor
+			if frame:GetTop() > GetScreenHeight() / 2 then
+				local x = frame:GetCenter()
+				if x < GetScreenWidth() / 2 then
+					anchor = "ANCHOR_BOTTOMRIGHT"
+				else
+					anchor = "ANCHOR_BOTTOMLEFT"
+				end
+			else
+				local x = frame:GetCenter()
+				if x < GetScreenWidth() / 2 then
+					anchor = "ANCHOR_TOPLEFT"
+				else
+					anchor = "ANCHOR_TOPRIGHT"
+				end
+			end
+			GameTooltip:SetOwner(frame, anchor)
+			if type(self.OnTooltipUpdate) == "function" and not self:IsDisabled() then
+				self:OnTooltipUpdate()
+			end
+			GameTooltip:Show()
+		end
+		return
+	elseif self.overrideTooltip then
+		if type(self.OnTooltipUpdate) == "function" and not self:IsDisabled() then
+			self:OnTooltipUpdate()
+		end
+		return
+	end
+	if not Tablet then return end
+	
 	FuBarPlugin.RegisterTablet(self)
 	if self:IsMinimapAttached() and not self:IsTooltipDetached() and self.minimapFrame then
 		Tablet:Refresh(self.minimapFrame)
@@ -454,7 +525,7 @@ function FuBarPlugin:Show(panelId)
 		end
 	elseif not self.db or not self.db.profile.hidden then
 		if panelId == 0 or not CheckFuBar() then
-			AceLibrary(MINIMAPCONTAINER_MAJOR_VERSION):AddPlugin(self)
+			MinimapContainer:AddPlugin(self)
 		else
 			FuBar:ShowPlugin(self, panelId or self.panelIdTmp)
 		end
@@ -469,6 +540,14 @@ function FuBarPlugin:Show(panelId)
 				self.iconFrame:Hide()
 			end
 		end
+		if AceOO.inherits(self, "AceAddon-2.0") then
+			if not AceAddon then
+				AceAddon = AceLibrary("AceAddon-2.0")
+			end
+			if AceAddon.addonsEnabled and not AceAddon.addonsEnabled[self] then
+				return
+			end
+		end
 		self:Update()
 	end
 end
@@ -481,7 +560,7 @@ function FuBarPlugin:Hide(check)
 		self.db.profile.hidden = true
 	end
 	if not self.hideWithoutStandby then
-		if self.db and not self.overrideTooltip and not self.cannotDetachTooltip and self:IsTooltipDetached() and self.db.profile.detachedTooltip and self.db.profile.detachedTooltip.detached then
+		if self.db and not self.overrideTooltip and not self.blizzardTooltip and not self.cannotDetachTooltip and self:IsTooltipDetached() and self.db.profile.detachedTooltip and self.db.profile.detachedTooltip.detached then
 			self:ReattachTooltip()
 			self.db.profile.detachedTooltip.detached = true
 		end
@@ -496,7 +575,7 @@ function FuBarPlugin:Hide(check)
 	if self.minimapFrame then
 		self.minimapFrame:Hide()
 	end
-
+	
 	if Dewdrop:IsOpen(self.frame) or (self.minimapFrame and Dewdrop:IsOpen(self.minimapFrame)) then
 		Dewdrop:Close()
 	end
@@ -507,14 +586,16 @@ function FuBarPlugin:SetIcon(path)
 		return
 	end
 	FuBarPlugin:argCheck(path, 2, "string", "boolean")
-	FuBarPlugin:assert(self.hasIcon, "Cannot set icon unless self.hasIcon is set. (" .. self:GetTitle() .. ")")
+	if not self.hasIcon then
+		FuBarPlugin:error("Cannot set icon unless self.hasIcon is set. (" .. self:GetTitle() .. ")")
+	end
 	if not self.iconFrame then
 		return
 	end
 	if type(path) ~= "string" then
-		path = format("Interface\\AddOns\\%s\\icon", self.folderName)
+		path = format("Interface\\AddOns\\%s\\icon", FuBarPlugin.folderNames[self] or self.folderName)
 	elseif not string.find(path, '^Interface[\\/]') then
-		path = format("Interface\\AddOns\\%s\\%s", self.folderName, path)
+		path = format("Interface\\AddOns\\%s\\%s", FuBarPlugin.folderNames[self] or self.folderName, path)
 	end
 	if string.sub(path, 1, 16) == "Interface\\Icons\\" then
 		self.iconFrame:SetTexCoord(0.05, 0.95, 0.05, 0.95)
@@ -576,7 +657,9 @@ function FuBarPlugin:SetText(text)
 	if not self.textFrame then
 		return
 	end
-	FuBarPlugin:assert(not self.hasNoText, "Cannot set text if self.hasNoText has been set. (" .. self:GetTitle() .. ")")
+	if self.hasNoText then
+		FuBarPlugin:error("Cannot set text if self.hasNoText has been set. (" .. self:GetTitle() .. ")")
+	end
 	FuBarPlugin:argCheck(text, 2, "string", "number")
 	if text == "" then
 		if self.hasIcon then
@@ -593,7 +676,9 @@ function FuBarPlugin:SetText(text)
 end
 
 function FuBarPlugin:GetText()
-	FuBarPlugin:assert(self.textFrame, "Cannot get text without a self.textFrame (" .. self:GetTitle() .. ")")
+	if not self.textFrame then
+		FuBarPlugin:error("Cannot get text without a self.textFrame (" .. self:GetTitle() .. ")")
+	end
 	if not self.hasNoText then
 		return self.textFrame:GetText() or ""
 	end
@@ -614,12 +699,24 @@ function FuBarPlugin:IsIconShown()
 end
 
 function FuBarPlugin:ToggleIconShown()
-	FuBarPlugin:assert(self.iconFrame, "Cannot toggle icon without a self.iconFrame (" .. self:GetTitle() .. ")")
-	FuBarPlugin:assert(self.hasIcon, "Cannot show icon unless self.hasIcon is set. (" .. self:GetTitle() .. ")")
-	FuBarPlugin:assert(not self.hasNoText, "Cannot hide icon if self.hasNoText is set. (" .. self:GetTitle() .. ")")
-	FuBarPlugin:assert(self.textFrame, "Cannot hide icon if self.textFrame is not set. (" .. self:GetTitle() .. ")")
-	FuBarPlugin:assert(self.iconFrame, "Cannot hide icon if self.iconFrame is not set. (" .. self:GetTitle() .. ")")
-	FuBarPlugin:assert(self.db, "Cannot hide icon if self.db is not available. (" .. self:GetTitle() .. ")")
+	if not self.iconFrame then
+		FuBarPlugin:error("Cannot toggle icon without a self.iconFrame (" .. self:GetTitle() .. ")")
+	end
+	if not self.hasIcon then
+		FuBarPlugin:error("Cannot show icon unless self.hasIcon is set. (" .. self:GetTitle() .. ")")
+	end
+	if self.hasNoText then
+		FuBarPlugin:error("Cannot hide icon if self.hasNoText is set. (" .. self:GetTitle() .. ")")
+	end
+	if not self.textFrame then
+		FuBarPlugin:error("Cannot hide icon if self.textFrame is not set. (" .. self:GetTitle() .. ")")
+	end
+	if not self.iconFrame then
+		FuBarPlugin:error("Cannot hide icon if self.iconFrame is not set. (" .. self:GetTitle() .. ")")
+	end
+	if not self.db then
+		FuBarPlugin:error("Cannot hide icon if self.db is not available. (" .. self:GetTitle() .. ")")
+	end
 	local value = not self:IsIconShown()
 	self.db.profile.showIcon = value
 	if value then
@@ -668,12 +765,24 @@ function FuBarPlugin:IsTextShown()
 end
 
 function FuBarPlugin:ToggleTextShown()
-	FuBarPlugin:assert(not self.cannotHideText, "Cannot hide text unless self.cannotHideText is unset. (" .. self:GetTitle() .. ")")
-	FuBarPlugin:assert(self.hasIcon, "Cannot show text unless self.hasIcon is set. (" .. self:GetTitle() .. ")")
-	FuBarPlugin:assert(not self.hasNoText, "Cannot hide text if self.hasNoText is set. (" .. self:GetTitle() .. ")")
-	FuBarPlugin:assert(self.textFrame, "Cannot hide text if self.textFrame is not set. (" .. self:GetTitle() .. ")")
-	FuBarPlugin:assert(self.iconFrame, "Cannot hide text if self.iconFrame is not set. (" .. self:GetTitle() .. ")")
-	FuBarPlugin:assert(self.db, "Cannot hide text if self.db is not available. (" .. self:GetTitle() .. ")")
+	if self.cannotHideText then
+		FuBarPlugin:error("Cannot hide text unless self.cannotHideText is unset. (" .. self:GetTitle() .. ")")
+	end
+	if not self.hasIcon then
+		FuBarPlugin:error("Cannot show text unless self.hasIcon is set. (" .. self:GetTitle() .. ")")
+	end
+	if self.hasNoText then
+		FuBarPlugin:error("Cannot hide text if self.hasNoText is set. (" .. self:GetTitle() .. ")")
+	end
+	if not self.textFrame then
+		FuBarPlugin:error("Cannot hide text if self.textFrame is not set. (" .. self:GetTitle() .. ")")
+	end
+	if not self.iconFrame then
+		FuBarPlugin:error("Cannot hide text if self.iconFrame is not set. (" .. self:GetTitle() .. ")")
+	end
+	if not self.db then
+		FuBarPlugin:error("Cannot hide text if self.db is not available. (" .. self:GetTitle() .. ")")
+	end
 	local value = not self:IsTextShown()
 	self.db.profile.showText = value
 	if value then
@@ -705,11 +814,15 @@ function FuBarPlugin:HideText()
 end
 
 function FuBarPlugin:IsTooltipDetached()
+	if self.blizzardTooltip or self.overrideTooltip or not Tablet then return end
+	
 	FuBarPlugin.RegisterTablet(self)
 	return not Tablet:IsAttached(self.frame)
 end
 
 function FuBarPlugin:ToggleTooltipDetached()
+	if self.blizzardTooltip or self.overrideTooltip or not Tablet then return end
+	
 	FuBarPlugin.RegisterTablet(self)
 	if self:IsTooltipDetached() then
 		Tablet:Attach(self.frame)
@@ -720,11 +833,15 @@ function FuBarPlugin:ToggleTooltipDetached()
 end
 
 function FuBarPlugin:DetachTooltip()
+	if self.blizzardTooltip or self.overrideTooltip or not Tablet then return end
+	
 	FuBarPlugin.RegisterTablet(self)
 	Tablet:Detach(self.frame)
 end
 
 function FuBarPlugin:ReattachTooltip()
+	if self.blizzardTooltip or self.overrideTooltip or not Tablet then return end
+	
 	FuBarPlugin.RegisterTablet(self)
 	Tablet:Attach(self.frame)
 end
@@ -755,21 +872,27 @@ local function IsCorrectPanel(panel)
 end
 
 function FuBarPlugin:SetPanel(panel)
-	if panel then
-		FuBarPlugin:assert(IsCorrectPanel(panel), "Bad argument #2 to `SetPanel'. Panel does not have the correct API.")
+	if panel and not IsCorrectPanel(panel) then
+		FuBarPlugin:error("Bad argument #2 to `SetPanel'. Panel does not have the correct API.")
 	end
 	self.panel = panel
 end
 
 function FuBarPlugin:SetFontSize(size)
-	FuBarPlugin:assert(not self.userDefinedFrame, "You must provide a SetFontSize(size) method if you provide your own frame.")
+	if self.userDefinedFrame then
+		FuBarPlugin:error((self.name and self.name .. ": " or "") .. "You must provide a SetFontSize(size) method if you provide your own frame.")
+	end
 	if self.hasIcon then
-		FuBarPlugin:assert(self.iconFrame, (self.name and self.name .. ": " or "") .. "No iconFrame found")
+		if not self.iconFrame then
+			FuBarPlugin:error((self.name and self.name .. ": " or "") .. "No iconFrame found")
+		end
 		self.iconFrame:SetWidth(size + 3)
 		self.iconFrame:SetHeight(size + 3)
 	end
 	if not self.hasNoText then
-		FuBarPlugin:assert(self.textFrame, (self.name and self.name .. ": " or "") .. "No textFrame found")
+		if not self.textFrame then
+			FuBarPlugin:error((self.name and self.name .. ": " or "") .. "No textFrame found")
+		end
 		local font, _, flags = self.textFrame:GetFont()
 		self.textFrame:SetFont(font, size, flags)
 	end
@@ -777,7 +900,11 @@ function FuBarPlugin:SetFontSize(size)
 end
 
 function FuBarPlugin:IsLoadOnDemand()
-	return IsAddOnLoadOnDemand(self.folderName)
+	local addon = FuBarPlugin.folderNames[self] or self.folderName
+	if not addon then
+		return
+	end
+	return IsAddOnLoadOnDemand(addon)
 end
 
 function FuBarPlugin:IsDisabled()
@@ -787,18 +914,24 @@ end
 function FuBarPlugin:OnInstanceInit(target)
 	if not AceEvent then
 		self:error(MAJOR_VERSION .. " requires AceEvent-2.0.")
-	elseif not Tablet then
-		self:error(MAJOR_VERSION .. " requires Tablet-2.0.")
 	elseif not Dewdrop then
 		self:error(MAJOR_VERSION .. " requires Dewdrop-2.0.")
 	end
 	self.registry[target] = true
-
-	local _,_,folderName = string.find(debugstack(6, 1, 0), "\\AddOns\\(.*)\\")
+	
+	local folderName
+	for i = 6, 3, -1 do
+		_,_,folderName = string.find(debugstack(i, 1, 0), "\\AddOns\\(.*)\\")
+		if folderName then
+			break
+		end
+	end
 	target.folderName = folderName
 	self.folderNames[target] = folderName
 end
+FuBarPlugin.OnManualEmbed = FuBarPlugin.OnInstanceInit
 
+local frame_OnClick, frame_OnDoubleClick, frame_OnMouseDown, frame_OnMouseUp, frame_OnReceiveDrag, frame_OnEnter, frame_OnLeave
 function FuBarPlugin:CreateBasicPluginFrame(name)
 	local frame = CreateFrame("Button", name, UIParent)
 	frame:SetFrameStrata("HIGH")
@@ -809,100 +942,177 @@ function FuBarPlugin:CreateBasicPluginFrame(name)
 	frame:SetWidth(150)
 	frame:SetHeight(24)
 	frame:SetPoint("CENTER", UIParent, "CENTER")
-
-	frame:SetScript("OnClick", function()
-		if type(self.OnClick) == "function" then
-			self:OnClick(arg1)
-		end
-	end)
-	frame:SetScript("OnDoubleClick", function()
-		if type(self.OnDoubleClick) == "function" then
-			self:OnDoubleClick(arg1)
-		end
-	end)
-	frame:SetScript("OnMouseDown", function()
-		if arg1 == "RightButton" and not IsShiftKeyDown() and not IsControlKeyDown() and not IsAltKeyDown() then
-			self:OpenMenu()
-			return
-		else
-			HideDropDownMenu(1)
-			if type(self.OnMouseDown) == "function" then
-				self:OnMouseDown(arg1)
+	frame.self = self
+	if not frame_OnEnter then
+		function frame_OnEnter()
+			local self = this.self
+			if self.blizzardTooltip then
+				GameTooltip:SetOwner(self:IsMinimapAttached() and self.minimapFrame or self.frame, "ANCHOR_CURSOR")
+				self:UpdateTooltip()
+			end
+			if type(self.OnEnter) == "function" then
+				self:OnEnter()
 			end
 		end
-	end)
-	frame:SetScript("OnMouseUp", function()
-		if type(self.OnMouseUp) == "function" then
-			self:OnMouseUp(arg1)
+	end
+	frame:SetScript("OnEnter", frame_OnEnter)
+	if not frame_OnLeave then
+		function frame_OnLeave()
+			local self = this.self
+			if type(self.OnLeave) == "function" then
+				self:OnLeave()
+			end
+			if self.blizzardTooltip and GameTooltip:IsOwned(self:IsMinimapAttached() and self.minimapFrame or self.frame) then
+				GameTooltip:Hide()
+			end
 		end
-	end)
-	frame:SetScript("OnReceiveDrag", function()
-		if type(self.OnReceiveDrag) == "function" then
-			self:OnReceiveDrag()
+	end
+	frame:SetScript("OnLeave", frame_OnLeave)
+	if not frame_OnClick then
+		function frame_OnClick()
+			if this.self:IsMinimapAttached() and this.dragged then return end
+			if type(this.self.OnClick) == "function" then
+				this.self:OnClick(arg1)
+			end
 		end
-	end)
+	end
+	frame:SetScript("OnClick", frame_OnClick)
+	if not frame_OnDoubleClick then
+		function frame_OnDoubleClick()
+			if type(this.self.OnDoubleClick) == "function" then
+				this.self:OnDoubleClick(arg1)
+			end
+		end
+	end
+	frame:SetScript("OnDoubleClick", frame_OnDoubleClick)
+	if not frame_OnMouseDown then
+		function frame_OnMouseDown()
+			if arg1 == "RightButton" and not IsShiftKeyDown() and not IsControlKeyDown() and not IsAltKeyDown() then
+				this.self:OpenMenu()
+				return
+			else
+				HideDropDownMenu(1)
+				if type(this.self.OnMouseDown) == "function" then
+					this.self:OnMouseDown(arg1)
+				end
+			end
+		end
+	end
+	frame:SetScript("OnMouseDown", frame_OnMouseDown)
+	if not frame_OnMouseUp then
+		function frame_OnMouseUp()
+			if type(this.self.OnMouseUp) == "function" then
+				this.self:OnMouseUp(arg1)
+			end
+		end
+	end
+	frame:SetScript("OnMouseUp", frame_OnMouseUp)
+	if not frame_OnReceiveDrag then
+		function frame_OnReceiveDrag()
+			if (this.self:IsMinimapAttached() and not this.dragged) and type(this.self.OnReceiveDrag) == "function" then
+				this.self:OnReceiveDrag()
+			end
+		end
+	end
+	frame:SetScript("OnReceiveDrag", frame_OnReceiveDrag)
 	return frame
 end
 
+local child_OnEnter, child_OnLeave, child_OnClick, child_OnDoubleClick, child_OnMouseDown, child_OnMouseUp, child_OnReceiveDrag
 function FuBarPlugin:CreatePluginChildFrame(frameType, name, parent)
-	FuBarPlugin:assert(self.frame, "You must have self.frame declared in order to add child frames")
+	if not self.frame then
+		FuBarPlugin:error((self.name and self.name .. ": " or "") .. "You must have self.frame declared in order to add child frames")
+	end
 	FuBarPlugin:argCheck(frameType, 1, "string")
 	local child = CreateFrame(frameType, name, parent)
 	if parent then
 		child:SetFrameLevel(parent:GetFrameLevel() + 2)
 	end
-	child:SetScript("OnEnter", function()
-		if self.frame:GetScript("OnEnter") then
-			self.frame:GetScript("OnEnter")()
-		end
-	end)
-	child:SetScript("OnLeave", function()
-		if self.frame:GetScript("OnLeave") then
-			self.frame:GetScript("OnLeave")()
-		end
-	end)
-	if child:HasScript("OnClick") then
-		child:SetScript("OnClick", function()
-			if self.frame:HasScript("OnClick") and self.frame:GetScript("OnClick") then
-				self.frame:GetScript("OnClick")()
+	child.self = self
+	if not child_OnEnter then
+		function child_OnEnter()
+			if this.self.frame:GetScript("OnEnter") then
+				this.self.frame:GetScript("OnEnter")()
 			end
-		end)
+		end
+	end
+	child:SetScript("OnEnter", child_OnEnter)
+	if not child_OnLeave then
+		function child_OnLeave()
+			if this.self.frame:GetScript("OnLeave") then
+				this.self.frame:GetScript("OnLeave")()
+			end
+		end
+	end
+	child:SetScript("OnLeave", child_OnLeave)
+	if child:HasScript("OnClick") then
+		if not child_OnClick then
+			function child_OnClick()
+				if this.self.frame:HasScript("OnClick") and this.self.frame:GetScript("OnClick") then
+					this.self.frame:GetScript("OnClick")()
+				end
+			end
+		end
+		child:SetScript("OnClick", child_OnClick)
 	end
 	if child:HasScript("OnDoubleClick") then
-		child:SetScript("OnDoubleClick", function()
-			if self.frame:HasScript("OnDoubleClick") and self.frame:GetScript("OnDoubleClick") then
-				self.frame:GetScript("OnDoubleClick")()
+		if not child_OnDoubleClick then
+			function child_OnDoubleClick()
+				if this.self.frame:HasScript("OnDoubleClick") and this.self.frame:GetScript("OnDoubleClick") then
+					this.self.frame:GetScript("OnDoubleClick")()
+				end
 			end
-		end)
+		end
+		child:SetScript("OnDoubleClick", child_OnDoubleClick)
 	end
-	child:SetScript("OnMouseDown", function()
-		if self.frame:GetScript("OnMouseDown") then
-			self.frame:GetScript("OnMouseDown")()
+	if not child_OnMouseDown then
+		function child_OnMouseDown()
+			if this.self.frame:HasScript("OnMouseDown") and this.self.frame:GetScript("OnMouseDown") then
+				this.self.frame:GetScript("OnMouseDown")()
+			end
 		end
-	end)
-	child:SetScript("OnMouseUp", function()
-		if self.frame:GetScript("OnMouseUp") then
-			self.frame:GetScript("OnMouseUp")()
+	end
+	child:SetScript("OnMouseDown", child_OnMouseDown)
+	if not child_OnMouseUp then
+		function child_OnMouseUp()
+			if this.self.frame:HasScript("OnMouseUp") and this.self.frame:GetScript("OnMouseUp") then
+				this.self.frame:GetScript("OnMouseUp")()
+			end
 		end
-	end)
-	child:SetScript("OnReceiveDrag", function()
-		if self.frame:GetScript("OnReceiveDrag") then
-			self.frame:GetScript("OnReceiveDrag")()
+	end
+	child:SetScript("OnMouseUp", child_OnMouseUp)
+	if not child_OnReceiveDrag then
+		function child_OnReceiveDrag(this)
+			if this.self.frame:HasScript("OnReceiveDrag") and this.self.frame:GetScript("OnReceiveDrag") then
+				this.self.frame:GetScript("OnReceiveDrag")()
+			end
 		end
-	end)
+	end
+	child:SetScript("OnReceiveDrag", child_OnReceiveDrag)
 	return child
 end
 
 function FuBarPlugin:OpenMenu(frame)
 	if not frame then
-		frame = self:GetFrame()
+		frame = self:IsMinimapAttached() and self.minimapFrame or self.frame
+	end
+	if not frame:IsVisible() then
+		frame = UIParent
 	end
 	if not frame or not self:GetFrame() or Dewdrop:IsOpen(frame) then
 		Dewdrop:Close()
 		return
 	end
-	Tablet:Close()
-
+	if self.blizzardTooltip then
+		if GameTooltip:IsOwned(frame) then
+			GameTooltip:Hide()
+		end
+	elseif self.overrideTooltip and type(self.CloseTooltip) == "function" then
+		self:CloseTooltip()
+	elseif not self.overrideTooltip and Tablet then
+		Tablet:Close()
+	end
+	
 	if not Dewdrop:IsRegistered(self:GetFrame()) then
 		if type(self.OnMenuRequest) == "table" and (not self.OnMenuRequest.handler or self.OnMenuRequest.handler == self) and self.OnMenuRequest.type == "group" then
 			Dewdrop:InjectAceOptionsTable(self, self.OnMenuRequest)
@@ -913,19 +1123,19 @@ function FuBarPlugin:OpenMenu(frame)
 		Dewdrop:Register(self:GetFrame(),
 			'children', type(self.OnMenuRequest) == "table" and self.OnMenuRequest or function(level, value, valueN_1, valueN_2, valueN_3, valueN_4)
 				if level == 1 then
-					Dewdrop:AddLine(
-						'text', self:GetTitle(),
-						'isTitle', true
-					)
-				end
-
-				if level == 1 then
+					if not self.hideMenuTitle then
+						Dewdrop:AddLine(
+							'text', self:GetTitle(),
+							'isTitle', true
+						)
+					end
+					
 					if self.OnMenuRequest then
 						self:OnMenuRequest(level, value, false, valueN_1, valueN_2, valueN_3, valueN_4)
 					end
-
+					
 					if not self.overrideMenu then
-						if self.MenuSettings then
+						if self.MenuSettings and not self.hideMenuTitle then
 							Dewdrop:AddLine()
 						end
 						self:AddImpliedMenuOptions()
@@ -967,8 +1177,10 @@ function FuBarPlugin:OpenMenu(frame)
 	end
 	if frame == self:GetFrame() then
 		Dewdrop:Open(self:GetFrame())
-	else
+	elseif frame ~= UIParent then
 		Dewdrop:Open(frame, self:GetFrame())
+	else
+		Dewdrop:Open(frame, self:GetFrame(), 'cursorX', true, 'cursorY', true)
 	end
 end
 
@@ -994,12 +1206,12 @@ function FuBarPlugin.OnEmbedInitialize(FuBarPlugin, self)
 		local frame = _G[name]
 		if not frame or not _G[name .. "Text"] or not _G[name .. "Icon"] then
 			frame = self:CreateBasicPluginFrame(name)
-
+			
 			local icon = frame:CreateTexture(name .. "Icon", "ARTWORK")
 			icon:SetWidth(16)
 			icon:SetHeight(16)
 			icon:SetPoint("LEFT", frame, "LEFT")
-
+			
 			local text = frame:CreateFontString(name .. "Text", "ARTWORK")
 			text:SetWidth(134)
 			text:SetHeight(24)
@@ -1012,16 +1224,16 @@ function FuBarPlugin.OnEmbedInitialize(FuBarPlugin, self)
 	else
 		self.userDefinedFrame = true
 	end
-
+	
 	self.frame.plugin = self
 	self.frame:SetParent(UIParent)
 	self.frame:SetPoint("RIGHT", UIParent, "LEFT", -5, 0)
 	self.frame:Hide()
-
+	
 	if self.hasIcon then
 		self:SetIcon(self.hasIcon)
 	end
-
+	
 	if CheckFuBar() then
 		FuBar:RegisterPlugin(self)
 	end
@@ -1035,6 +1247,7 @@ local CheckShow = function(self, panelId)
 end
 
 local recheckPlugins
+local AceConsole
 function FuBarPlugin.OnEmbedEnable(FuBarPlugin, self)
 	if not self.userDefinedFrame then
 		if self:IsIconShown() then
@@ -1044,56 +1257,58 @@ function FuBarPlugin.OnEmbedEnable(FuBarPlugin, self)
 		end
 	end
 	self:CheckWidth(true)
-
+	
 	if not self.hideWithoutStandby or (self.db and not self.db.profile.hidden) then
 		if FuBarPlugin.enabledPlugins[self] then
 			CheckShow(self, self.panelIdTmp)
 		else
-			FuBarPlugin:ScheduleEvent(CheckShow, 0, self, self.panelIdTmp)
+			FuBarPlugin:ScheduleEvent("FuBarPlugin-CheckShow-" .. tostring(self), CheckShow, 0, self, self.panelIdTmp)
 		end
 	end
 	FuBarPlugin.enabledPlugins[self] = true
-
-	if not self.overrideTooltip and not self.cannotDetachTooltip and self.db and self.db.profile.detachedTooltip and self.db.profile.detachedTooltip.detached then
-		FuBarPlugin:ScheduleEvent(self.DetachTooltip, 0, self)
+	
+	if not self.blizzardTooltip and not self.overrideTooltip and not self.cannotDetachTooltip and self.db and self.db.profile.detachedTooltip and self.db.profile.detachedTooltip.detached then
+		FuBarPlugin:ScheduleEvent("FuBarPlugin-DetachTooltip-" .. tostring(self), self.DetachTooltip, 0, self)
 	end
-
+	
 	if self:IsLoadOnDemand() and CheckFuBar() then
 		if not FuBar.db.profile.loadOnDemand then
 			FuBar.db.profile.loadOnDemand = {}
 		end
-		if not FuBar.db.profile.loadOnDemand[self.folderName] then
-			FuBar.db.profile.loadOnDemand[self.folderName] = {}
+		if not FuBar.db.profile.loadOnDemand[FuBarPlugin.folderNames[self] or self.folderName] then
+			FuBar.db.profile.loadOnDemand[FuBarPlugin.folderNames[self] or self.folderName] = {}
 		end
-		FuBar.db.profile.loadOnDemand[self.folderName].disabled = nil
+		FuBar.db.profile.loadOnDemand[FuBarPlugin.folderNames[self] or self.folderName].disabled = nil
 	end
-
+	
 	if CheckFuBar() and AceLibrary:HasInstance("AceConsole-2.0") then
 		if not recheckPlugins then
-			local AceConsole = AceLibrary("AceConsole-2.0")
-			function recheckPlugins()
+			if not AceConsole then
+				AceConsole = AceLibrary("AceConsole-2.0")
+			end
+			recheckPlugins = function()
 				for k,v in pairs(AceConsole.registry) do
-					if type(v) == "table" and v.args and AceOO.inherits(v.handler, FuBarPlugin) and not v.independentProfile then
+					if type(v) == "table" and v.args and AceOO.inherits(v.handler, FuBarPlugin) and not v.handler.independentProfile then
 						v.args.profile = nil
 					end
 				end
 			end
 		end
-		FuBarPlugin:ScheduleEvent(recheckPlugins, 0)
+		FuBarPlugin:ScheduleEvent("FuBarPlugin-recheckPlugins", recheckPlugins, 0)
 	end
 end
 
 function FuBarPlugin.OnEmbedDisable(FuBarPlugin, self)
 	self:Hide(false)
-
+	
 	if self:IsLoadOnDemand() and CheckFuBar() then
 		if not FuBar.db.profile.loadOnDemand then
 			FuBar.db.profile.loadOnDemand = {}
 		end
-		if not FuBar.db.profile.loadOnDemand[self.folderName] then
-			FuBar.db.profile.loadOnDemand[self.folderName] = {}
+		if not FuBar.db.profile.loadOnDemand[FuBarPlugin.folderNames[self] or self.folderName] then
+			FuBar.db.profile.loadOnDemand[FuBarPlugin.folderNames[self] or self.folderName] = {}
 		end
-		FuBar.db.profile.loadOnDemand[self.folderName].disabled = true
+		FuBar.db.profile.loadOnDemand[FuBarPlugin.folderNames[self] or self.folderName].disabled = true
 	end
 end
 
@@ -1103,10 +1318,15 @@ function FuBarPlugin.OnEmbedProfileEnable(FuBarPlugin, self)
 		if not self.db.profile.detachedTooltip then
 			self.db.profile.detachedTooltip = {}
 		end
-		if Tablet.registry[self.frame] then
-			Tablet:UpdateDetachedData(self.frame, self.db.profile.detachedTooltip)
-		else
-			FuBarPlugin.RegisterTablet(self)
+		if not self.blizzardTooltip and not self.overrideTooltip and Tablet then
+			if Tablet.registry[self.frame] then
+				Tablet:UpdateDetachedData(self.frame, self.db.profile.detachedTooltip)
+			else
+				FuBarPlugin.RegisterTablet(self)
+			end
+		end
+		if MinimapContainer:HasPlugin(self) then
+			MinimapContainer:ReadjustLocation(self)
 		end
 	end
 end
@@ -1156,7 +1376,7 @@ function FuBarPlugin.GetAceOptionsDataTable(FuBarPlugin, self)
 			get = "IsTooltipDetached",
 			set = "ToggleTooltipDetached",
 			hidden = function()
-				return self.overrideTooltip or self.cannotDetachTooltip or self:IsDisabled()
+				return not Tablet or self.blizzardTooltip or self.overrideTooltip or self.cannotDetachTooltip or self:IsDisabled()
 			end,
 			order = -13.4,
 			handler = self,
@@ -1175,7 +1395,7 @@ function FuBarPlugin.GetAceOptionsDataTable(FuBarPlugin, self)
 				return not self:IsTooltipDetached()
 			end,
 			hidden = function()
-				return self.overrideTooltip or self.cannotDetachTooltip or self:IsDisabled()
+				return not Tablet or self.blizzardTooltip or self.overrideTooltip or self.cannotDetachTooltip or self:IsDisabled()
 			end,
 			order = -13.3,
 			handler = self,
@@ -1241,13 +1461,13 @@ end
 
 local function activate(self, oldLib, oldDeactivate)
 	FuBarPlugin = self
-
+	
 	if oldLib then
 		self.registry = oldLib.registry
 		self.folderNames = oldLib.folderNames
 		self.enabledPlugins = oldLib.enabledPlugins
 	end
-
+	
 	if not self.registry then
 		self.registry = {}
 	end
@@ -1257,9 +1477,9 @@ local function activate(self, oldLib, oldDeactivate)
 	if not self.enabledPlugins then
 		self.enabledPlugins = {}
 	end
-
+	
 	FuBarPlugin.activate(self, oldLib, oldDeactivate)
-
+	
 	if oldDeactivate then
 		oldDeactivate(oldLib)
 	end
@@ -1268,7 +1488,7 @@ end
 local function external(self, major, instance)
 	if major == "AceEvent-2.0" then
 		AceEvent = instance
-
+		
 		AceEvent:embed(self)
 	elseif major == "Tablet-2.0" then
 		Tablet = instance
@@ -1279,23 +1499,9 @@ end
 
 AceLibrary:Register(FuBarPlugin, MAJOR_VERSION, MINOR_VERSION, activate, nil, external)
 
-local MinimapContainer = {}
+MinimapContainer = {}
 
-local IsMinimapSquare
-do
-	local value
-	function IsMinimapSquare()
-		if value == nil then
-			if not AceEvent or not AceEvent:IsFullyInitialized() then
-				return IsAddOnLoaded("CornerMinimap") or IsAddOnLoaded("SquareMinimap") or IsAddOnLoaded("Squeenix")
-			else
-				value = IsAddOnLoaded("CornerMinimap") or IsAddOnLoaded("SquareMinimap") or IsAddOnLoaded("Squeenix") and true or false
-			end
-		end
-		return value
-	end
-end
-
+local minimap_OnMouseDown, minimap_OnMouseUp
 function MinimapContainer:AddPlugin(plugin)
 	if CheckFuBar() and FuBar:IsChangingProfile() then
 		return
@@ -1307,8 +1513,8 @@ function MinimapContainer:AddPlugin(plugin)
 	if not plugin.minimapFrame then
 		local frame = CreateFrame("Button", plugin.frame:GetName() .. "MinimapButton", Minimap)
 		plugin.minimapFrame = frame
-		AceLibrary(MAJOR_VERSION).RegisterTablet(plugin)
-		Tablet:Register(frame, plugin.frame)
+		--AceLibrary(MAJOR_VERSION).RegisterTablet(plugin)
+		--Tablet:Register(frame, plugin.frame)
 		frame.plugin = plugin
 		frame:SetWidth(31)
 		frame:SetHeight(31)
@@ -1334,62 +1540,98 @@ function MinimapContainer:AddPlugin(plugin)
 		overlay:SetPoint("TOPLEFT",frame,"TOPLEFT")
 		frame:EnableMouse(true)
 		frame:RegisterForClicks("LeftButtonUp")
-		frame.plugin = plugin
-		frame:SetScript("OnClick", function()
-			if type(plugin.OnClick) == "function" then
-				if not this.dragged then
-					plugin:OnClick(arg1)
+		
+		frame.self = plugin
+		if not frame_OnEnter then
+			function frame_OnEnter()
+				if type(this.self.OnEnter) == "function" then
+					this.self:OnEnter()
 				end
 			end
-		end)
-		frame:SetScript("OnDoubleClick", function()
-			if type(plugin.OnDoubleClick) == "function" then
-				plugin:OnDoubleClick(arg1)
-			end
-		end)
-		frame:SetScript("OnReceiveDrag", function()
-			if type(plugin.OnReceiveDrag) == "function" then
-				if not this.dragged then
-					plugin:OnReceiveDrag()
+		end
+		frame:SetScript("OnEnter", frame_OnEnter)
+		if not frame_OnLeave then
+			function frame_OnLeave()
+				if type(this.self.OnLeave) == "function" then
+					this.self:OnLeave()
 				end
 			end
-		end)
-		frame:SetScript("OnMouseDown", function()
-			this.dragged = false
-			if arg1 == "LeftButton" and not IsShiftKeyDown() and not IsControlKeyDown() and not IsAltKeyDown() then
-				HideDropDownMenu(1)
-				if type(plugin.OnMouseDown) == "function" then
-					plugin:OnMouseDown(arg1)
-				end
-			elseif arg1 == "RightButton" and not IsShiftKeyDown() and not IsControlKeyDown() and not IsAltKeyDown() then
-				plugin:OpenMenu(frame)
-			else
-				HideDropDownMenu(1)
-				if type(plugin.OnMouseDown) == "function" then
-					plugin:OnMouseDown(arg1)
+		end
+		frame:SetScript("OnLeave", frame_OnLeave)
+		if not frame_OnClick then
+			function frame_OnClick()
+				if this.self:IsMinimapAttached() and this.dragged then return end
+				if type(this.self.OnClick) == "function" then
+					this.self:OnClick(arg1)
 				end
 			end
-			if plugin.OnClick or plugin.OnMouseDown or plugin.OnMouseUp or plugin.OnDoubleClick then
-				if string.sub(this.plugin.minimapIcon:GetTexture(), 1, 16) == "Interface\\Icons\\" then
-					plugin.minimapIcon:SetTexCoord(0.14, 0.86, 0.14, 0.86)
+		end
+		frame:SetScript("OnClick", frame_OnClick)
+		if not frame_OnDoubleClick then
+			function frame_OnDoubleClick()
+				if type(this.self.OnDoubleClick) == "function" then
+					this.self:OnDoubleClick(arg1)
+				end
+			end
+		end
+		frame:SetScript("OnDoubleClick", frame_OnDoubleClick)
+		if not frame_OnReceiveDrag then
+			function frame_OnReceiveDrag()
+				if (this.self:IsMinimapAttached() and not this.dragged) and type(this.self.OnReceiveDrag) == "function" then
+					this.self:OnReceiveDrag()
+				end
+			end
+		end
+		frame:SetScript("OnReceiveDrag", frame_OnReceiveDrag)
+		if not minimap_OnMouseDown then
+			function minimap_OnMouseDown()
+				this.dragged = false
+				if arg1 == "LeftButton" and not IsShiftKeyDown() and not IsControlKeyDown() and not IsAltKeyDown() then
+					HideDropDownMenu(1)
+					if type(this.self.OnMouseDown) == "function" then
+						this.self:OnMouseDown(arg1)
+					end
+				elseif arg1 == "RightButton" and not IsShiftKeyDown() and not IsControlKeyDown() and not IsAltKeyDown() then
+					this.self:OpenMenu(this)
 				else
-					plugin.minimapIcon:SetTexCoord(0.1, 0.9, 0.1, 0.9)
+					HideDropDownMenu(1)
+					if type(this.self.OnMouseDown) == "function" then
+						this.self:OnMouseDown(arg1)
+					end
+				end
+				if this.self.OnClick or this.self.OnMouseDown or this.self.OnMouseUp or this.self.OnDoubleClick then
+					if string.sub(this.self.minimapIcon:GetTexture(), 1, 16) == "Interface\\Icons\\" then
+						this.self.minimapIcon:SetTexCoord(0.14, 0.86, 0.14, 0.86)
+					else
+						this.self.minimapIcon:SetTexCoord(0.1, 0.9, 0.1, 0.9)
+					end
 				end
 			end
-		end)
-		frame:SetScript("OnMouseUp", function()
-			if not this.dragged and type(plugin.OnMouseUp) == "function" then
-				plugin:OnMouseUp(arg1)
+		end
+		frame:SetScript("OnMouseDown", minimap_OnMouseDown)
+		if not minimap_OnMouseUp then
+			function minimap_OnMouseUp()
+				if not this.dragged and type(this.self.OnMouseUp) == "function" then
+					this.self:OnMouseUp(arg1)
+				end
+				if string.sub(this.self.minimapIcon:GetTexture(), 1, 16) == "Interface\\Icons\\" then
+					this.self.minimapIcon:SetTexCoord(0.05, 0.95, 0.05, 0.95)
+				else
+					this.self.minimapIcon:SetTexCoord(0, 1, 0, 1)
+				end
 			end
-			if string.sub(this.plugin.minimapIcon:GetTexture(), 1, 16) == "Interface\\Icons\\" then
-				plugin.minimapIcon:SetTexCoord(0.05, 0.95, 0.05, 0.95)
-			else
-				plugin.minimapIcon:SetTexCoord(0, 1, 0, 1)
-			end
-		end)
+		end
+		frame:SetScript("OnMouseUp", minimap_OnMouseUp)
 		frame:RegisterForDrag("LeftButton")
 		frame:SetScript("OnDragStart", self.OnDragStart)
 		frame:SetScript("OnDragStop", self.OnDragStop)
+		
+		if not plugin.blizzardTooltip and not plugin.overrideTooltip and Tablet then
+			-- Note that we have to do this after :SetScript("OnEnter"), etc,
+			-- so that Tablet-2.0 can override it properly.
+			FuBarPlugin.RegisterTablet(plugin)
+			Tablet:Register(frame, plugin.frame)
+		end
 	end
 	plugin.frame:Hide()
 	plugin.minimapFrame:Show()
@@ -1417,6 +1659,45 @@ function MinimapContainer:RemovePlugin(index)
 	return true
 end
 
+local MinimapShapes = {
+	-- quadrant booleans (same order as SetTexCoord)
+	-- {upper-left, lower-left, upper-right, lower-right}
+	-- true = rounded, false = squared
+	["ROUND"]					= {true,  true,  true,  true },
+	["SQUARE"]					= {false, false, false, false},
+	["CORNER-TOPLEFT"]			= {true,  false, false, false},
+	["CORNER-TOPRIGHT"]			= {false, false, true,  false},
+	["CORNER-BOTTOMLEFT"]		= {false, true,  false, false},
+	["CORNER-BOTTOMRIGHT"]		= {false, false, false, true },
+	["SIDE-LEFT"]				= {true,  true,  false, false},
+	["SIDE-RIGHT"]				= {false, false, true,  true },
+	["SIDE-TOP"]				= {true,  false, true,  false},
+	["SIDE-BOTTOM"]				= {false, true,  false, true },
+	["TRICORNER-TOPLEFT"]		= {true,  true,  true,  false},
+	["TRICORNER-TOPRIGHT"]		= {true,  false, true,  true },
+	["TRICORNER-BOTTOMLEFT"]	= {true,  true,  false, true },
+	["TRICORNER-BOTTOMRIGHT"]	= {false, true,  true,  true },
+}
+
+local function GetMinimapShape() -- in 1.12.1 this API does not exist, so you need to specify which shape of minimap is used in certain addons. For all others, the default type of ROUND
+	local minimapShape = "ROUND"
+	if Squeenix or CornerMinimap or SquareMinimap then
+		minimapShape = "SQUARE"
+	elseif simpleMinimap_Skins then
+		local skins ={ "ROUND",
+			"SQUARE",
+			"CORNER-BOTTOMLEFT",
+			"CORNER-BOTTOMRIGHT",
+			"CORNER-TOPRIGHT",
+			"CORNER-TOPLEFT" 
+		}
+		minimapShape = skins[simpleMinimap_Skins.db.profile.skin]
+	elseif pfUI and pfUI_config["disabled"]["minimap"] ~= "1" then
+		minimapShape = "SQUARE"
+	end
+	return minimapShape
+end
+
 function MinimapContainer:ReadjustLocation(plugin)
 	local frame = plugin.minimapFrame
 	if plugin.db and plugin.db.profile.minimapPositionWild then
@@ -1430,19 +1711,35 @@ function MinimapContainer:ReadjustLocation(plugin)
 		else
 			position = plugin.minimapPosition or plugin.defaultMinimapPosition or math.random(1, 360)
 		end
-		local angle = math.rad(position or 0)
-		local x,y
-		if not IsMinimapSquare() then
-			x = math.cos(angle) * 80
-			y = math.sin(angle) * 80
-		else
-			x = 110 * math.cos(angle)
-			y = 110 * math.sin(angle)
-			x = math.max(-82, math.min(x, 84))
-			y = math.max(-86, math.min(y, 82))
-		end
-		frame:SetPoint("CENTER", Minimap, "CENTER", x, y)
+		self:UpdateButtonPosition(frame, position)
 	end
+end
+
+function MinimapContainer:UpdateButtonPosition(frame, position, rounding)
+	if not rounding then rounding = 0 end
+	local radius = (Minimap:GetTop()-Minimap:GetBottom())/2
+	local angle = math.rad(position) -- determine position on your own
+	local x = math.sin(angle)
+	local y = math.cos(angle)
+	local q = 1
+	
+	if x < 0 then
+		q = q + 1	-- lower
+	end
+	if y > 0 then
+		q = q + 2	-- right
+	end
+	local minimapShape = GetMinimapShape()
+	local quadTable = MinimapShapes[minimapShape]
+	if quadTable[q] then
+		x = x*radius
+		y = y*radius
+	else
+		local diagRadius = math.sqrt(2*(radius)^2)-rounding
+		x = math.max(-radius, math.min(x*diagRadius, radius))
+		y = math.max(-radius, math.min(y*diagRadius, radius))
+	end
+	frame:SetPoint("CENTER", Minimap, "CENTER", x, y)
 end
 
 function MinimapContainer:GetPlugin(index)
@@ -1475,10 +1772,10 @@ function MinimapContainer.OnDragStart()
 	this.dragged = true
 	this:LockHighlight()
 	this:SetScript("OnUpdate", MinimapContainer.OnUpdate)
-	if string.sub(this.plugin.minimapIcon:GetTexture(), 1, 16) == "Interface\\Icons\\" then
-		this.plugin.minimapIcon:SetTexCoord(0.05, 0.95, 0.05, 0.95)
+	if string.sub(this.self.minimapIcon:GetTexture(), 1, 16) == "Interface\\Icons\\" then
+		this.self.minimapIcon:SetTexCoord(0.05, 0.95, 0.05, 0.95)
 	else
-		this.plugin.minimapIcon:SetTexCoord(0, 1, 0, 1)
+		this.self.minimapIcon:SetTexCoord(0, 1, 0, 1)
 	end
 end
 
@@ -1499,47 +1796,47 @@ function MinimapContainer.OnUpdate()
 		elseif position > 360 then
 			position = position - 360
 		end
-		if this.plugin.db then
-			this.plugin.db.profile.minimapPosition = position
-			this.plugin.db.profile.minimapPositionX = nil
-			this.plugin.db.profile.minimapPositionY = nil
-			this.plugin.db.profile.minimapPositionWild = nil
+		if this.self.db then
+			this.self.db.profile.minimapPosition = position
+			this.self.db.profile.minimapPositionX = nil
+			this.self.db.profile.minimapPositionY = nil
+			this.self.db.profile.minimapPositionWild = nil
 		else
-			this.plugin.minimapPosition = position
-			this.plugin.minimapPositionX = nil
-			this.plugin.minimapPositionY = nil
-			this.plugin.minimapPositionWild = nil
+			this.self.minimapPosition = position
+			this.self.minimapPositionX = nil
+			this.self.minimapPositionY = nil
+			this.self.minimapPositionWild = nil
 		end
 	else
 		local px, py = GetCursorPosition()
 		local scale = UIParent:GetEffectiveScale()
 		px, py = px / scale, py / scale
-		if this.plugin.db then
-			this.plugin.db.profile.minimapPositionX = px
-			this.plugin.db.profile.minimapPositionY = py
-			this.plugin.db.profile.minimapPosition = nil
-			this.plugin.db.profile.minimapPositionWild = true
+		if this.self.db then
+			this.self.db.profile.minimapPositionX = px
+			this.self.db.profile.minimapPositionY = py
+			this.self.db.profile.minimapPosition = nil
+			this.self.db.profile.minimapPositionWild = true
 		else
-			this.plugin.minimapPositionX = px
-			this.plugin.minimapPositionY = py
-			this.plugin.minimapPosition = nil
-			this.plugin.minimapPositionWild = true
+			this.self.minimapPositionX = px
+			this.self.minimapPositionY = py
+			this.self.minimapPosition = nil
+			this.self.minimapPositionWild = true
 		end
 	end
-	MinimapContainer:ReadjustLocation(this.plugin)
+	MinimapContainer:ReadjustLocation(this.self)
 end
 
 local function activate(self, oldLib, oldDeactivate)
 	MinimapContainer = self
-
+	
 	if oldLib then
 		self.plugins = oldLib.plugins
 	end
-
+	
 	if not self.plugins then
 		self.plugins = {}
 	end
-
+	
 	if oldDeactivate then
 		oldDeactivate(oldLib)
 	end
