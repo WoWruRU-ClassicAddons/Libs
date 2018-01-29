@@ -110,6 +110,18 @@ BabbleClass:RegisterTranslations("koKR", function() return {
 	["Rogue"] = "도적",
 } end)
 
+BabbleClass:RegisterTranslations("esES", function() return {
+	["Warlock"] = "Brujo",
+	["Warrior"] = "Guerrero",
+	["Hunter"] = "Cazador",
+	["Mage"] = "Mago",
+	["Priest"] = "Sacerdote",
+	["Druid"] = "Druida",
+	["Paladin"] = "Palad\195\173n",
+	["Shaman"] = "Cham\195\161n",
+	["Rogue"] = "P\195\173caro",
+} end)
+
 BabbleClass:Debug()
 BabbleClass:SetStrictness(true)
 

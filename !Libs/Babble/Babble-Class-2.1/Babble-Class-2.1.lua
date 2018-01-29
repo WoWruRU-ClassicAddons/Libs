@@ -84,6 +84,18 @@ AceLocale:RegisterTranslation(MAJOR_VERSION, "zhCN", function() return {
 	["Rogue"] = "盗贼",
 } end)
 
+AceLocale:RegisterTranslation(MAJOR_VERSION, "zhTW", function() return {
+	["Warlock"] = "術士",
+	["Warrior"] = "戰士",
+	["Hunter"] = "獵人",
+	["Mage"] = "法師",
+	["Priest"] = "牧師",
+	["Druid"] = "德魯伊",
+	["Paladin"] = "聖騎士",
+	["Shaman"] = "薩滿",
+	["Rogue"] = "盜賊",
+} end)
+
 AceLocale:RegisterTranslation(MAJOR_VERSION, "koKR", function() return {
 	["Warlock"] = "흑마법사",
 	["Warrior"] = "전사",
@@ -94,6 +106,18 @@ AceLocale:RegisterTranslation(MAJOR_VERSION, "koKR", function() return {
 	["Paladin"] = "성기사",
 	["Shaman"] = "주술사",
 	["Rogue"] = "도적",
+} end)
+
+AceLocale:RegisterTranslation(MAJOR_VERSION, "esES", function() return {
+	["Warlock"] = "Brujo",
+	["Warrior"] = "Guerrero",
+	["Hunter"] = "Cazador",
+	["Mage"] = "Mago",
+	["Priest"] = "Sacerdote",
+	["Druid"] = "Druida",
+	["Paladin"] = "Palad\195\173n",
+	["Shaman"] = "Cham\195\161n",
+	["Rogue"] = "P\195\173caro",
 } end)
 
 BabbleClass = AceLocale:GetInstance(MAJOR_VERSION, true)
