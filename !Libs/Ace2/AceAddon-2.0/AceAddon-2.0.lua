@@ -354,7 +354,7 @@ elseif GetLocale() == "ruRU" then
 	CATEGORY = "Категория"
 	EMAIL = "Почта"
 	WEBSITE = "Сайт"
-	CREDITS = "Титры"
+	CREDITS = "Авторы"
 	COMMANDS = "Команды"
 	
 	ABOUT = "Об аддоне"
