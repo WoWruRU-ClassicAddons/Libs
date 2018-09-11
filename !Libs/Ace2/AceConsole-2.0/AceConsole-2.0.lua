@@ -564,26 +564,34 @@ local function validateOptions(options, position, baseOptions, fromPass)
 			return '"args" must be a table', position
 		end
 		for k,v in pairs(options.args) do
-			if type(k) ~= "string" then
-				return '"args" keys must be strings', position
-			elseif string.find(k, "%s") then
-				return string.format('"args" keys must not include spaces. %q is not appropriate.', k), position
-			elseif string.len(k) == 0 then
-				return '"args" keys must not be 0-length strings.', position
+			if type(k) ~= "number" then
+				if type(k) ~= "string" then
+					return '"args" keys must be strings or numbers', position
+				elseif string.len(k) == 0 then
+					return '"args" keys must not be 0-length strings.', position
+				end
 			end
 			if type(v) ~= "table" then
-				return '"args" values must be tables', position and position .. "." .. k or k
+				if type(k) == "number" then
+					return '"args" values must be tables', position and position .. "[" .. k .. "]" or "[" .. k .. "]"
+				else
+					return '"args" values must be tables', position and position .. "." .. k or k
+				end
 			end
 			local newposition
-			if position then
-				newposition = position .. ".args." .. k
+			if type(k) == "number" then
+				newposition = position and position .. ".args[" .. k .. "]" or "args[" .. k .. "]"
 			else
-				newposition = "args." .. k
+				newposition = position and position .. ".args." .. k or "args." .. k
 			end
 			local err, pos = validateOptions(v, newposition, baseOptions, options.pass)
 			if err then
 				return err, pos
 			end
+		end
+	elseif kind == "execute" then
+		if type(options.confirm) ~= "string" and type(options.confirm) ~= "boolean" and type(options.confirm) ~= "nil" then
+			return '"confirm" must be a string, boolean, or nil', position
 		end
 	end
 end
